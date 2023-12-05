@@ -19,22 +19,30 @@ class UserPhotoStore:
     def load(self):
         if os.path.isfile(f'{USER_PHOTO_DIR}/{USER_PHOTO_FILE}'):
             with open(f'{USER_PHOTO_DIR}/{USER_PHOTO_FILE}', 'rb') as f:
-                self.photos = pickle.load(f)
+                data = pickle.load(f)
+                self.photos = data['photos']
+                self.groups = data['groups']
 
     def dump(self):
         with open(f'{USER_PHOTO_DIR}/{USER_PHOTO_FILE}', 'wb') as f:
-            pickle.dump(self.photos, f)
+            data = {
+                'photos': self.photos,
+                'groups': self.groups
+                }
+            pickle.dump(data, f)
 
     def update(self, user_id: int, file_id: str):
         return self.save(user_id, file_id)
 
     def register_group(self, chat_id: int):
-        self.groups.append(chat_id)
-        self.dump()
+        if chat_id not in self.groups:
+            self.groups.append(chat_id)
+            self.dump()
 
     def unregister_group(self, chat_id: int):
-        self.groups.remove(chat_id)
-        self.dump()
+        if chat_id in self.groups:
+            self.groups.remove(chat_id)
+            self.dump()
 
 
 user_photos = UserPhotoStore()

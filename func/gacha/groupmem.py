@@ -75,7 +75,8 @@ async def gacha_group_member(client: Client, message: Message) -> Optional[Messa
     if photo:
         return await message.reply_photo(
             photo=photo,
-            caption=msg_text
+            caption=msg_text,
+            quote=False
         )
     else:
         if raw_photo:
