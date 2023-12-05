@@ -8,7 +8,8 @@ RUN set -ex && \
     conda create -n jd pillow aiohttp pyrogram apscheduler uvloop -y && \
     conda clean -afy && \
     conda activate jd && \
-    pip install tgcrypto || wget "https://github.com/KumaTea/NextBot/releases/download/1.0/TgCrypto-1.2.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl" && pip install ./TgCrypto-1.2.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl && rm ./TgCrypto-1.2.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl && \
+    pip install telethon && \
+    pip install tgcrypto 2>/dev/null || wget "https://github.com/KumaTea/NextBot/releases/download/1.0/TgCrypto-1.2.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl" && pip install ./TgCrypto-1.2.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl && rm ./TgCrypto-1.2.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl && \
     rm -rf /root/.cache/*
 
 

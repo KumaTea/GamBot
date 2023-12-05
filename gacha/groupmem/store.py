@@ -6,6 +6,7 @@ from common.data import USER_PHOTO_DIR, USER_PHOTO_FILE
 class UserPhotoStore:
     def __init__(self):
         self.photos = {}
+        self.groups = []
         self.load()
 
     def save(self, user_id: int, file_id: str):
@@ -26,6 +27,14 @@ class UserPhotoStore:
 
     def update(self, user_id: int, file_id: str):
         return self.save(user_id, file_id)
+
+    def register_group(self, chat_id: int):
+        self.groups.append(chat_id)
+        self.dump()
+
+    def unregister_group(self, chat_id: int):
+        self.groups.remove(chat_id)
+        self.dump()
 
 
 user_photos = UserPhotoStore()

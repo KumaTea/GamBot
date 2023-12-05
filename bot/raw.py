@@ -1,5 +1,4 @@
 import aiohttp
-import logging
 from bot.session import config
 
 

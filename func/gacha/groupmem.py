@@ -43,15 +43,13 @@ async def retrieve_group_members(client: Client, message: Message):
     grp_data.update(chat_id, members)
 
 
-async def run_pic_bot(chat_id: int):
-    command = '/opt/conda/envs/jd/bin/python3 propicbot.py --chat-id ' + str(chat_id)
-    proc = await asyncio.create_subprocess_shell(
-        command,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE
-    )
-    # don't wait
-    return proc
+async def run_pic_bot(chat_id: int, forced: bool = False):
+    if forced or chat_id not in user_photos.groups:
+        command = '/opt/conda/envs/jd/bin/python3 propicbot.py --chat-id ' + str(chat_id)
+        proc = await asyncio.create_subprocess_shell(command)
+        user_photos.register_group(chat_id)
+        # don't wait
+        return proc
 
 
 async def gacha_group_member(client: Client, message: Message) -> Optional[Message]:

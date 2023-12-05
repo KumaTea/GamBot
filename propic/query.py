@@ -17,7 +17,7 @@ def is_qualified_user(user: User) -> bool:
 
 async def get_chat_member(chat_id: int) -> List[User]:
     members = []
-    for user in me.get_participants(chat_id):
+    for user in await me.get_participants(chat_id):
         if is_qualified_user(user):
             members.append(user)
     return members
