@@ -4,7 +4,7 @@ from tqdm import tqdm
 from bs4 import BeautifulSoup
 
 
-character_file = './gacha/genshin/char.json'
+character_file = 'data/genshin/char.json'
 character_url = 'https://wiki.biligame.com/ys/%E8%A7%92%E8%89%B2'
 wiki_file_url = 'https://wiki.biligame.com/ys/%E6%96%87%E4%BB%B6:'
 
@@ -105,7 +105,7 @@ def get_character_data():
             'name': char,
             'rarity': 5 if char in rarity_5 else 4 if char in rarity_4 else 0,
             'head': get_character_head_image(char),
-            'full': get_character_full_image(char),
+            'image': get_character_full_image(char),
         }
         pbar.write(str(char_data[char]))
     return char_data

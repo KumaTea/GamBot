@@ -8,6 +8,7 @@ from pyrogram.handlers import MessageHandler
 def register_handlers():
     # group commands
     bot.add_handler(MessageHandler(command_stock, filters.command(['stock']) & filters.group))
+    bot.add_handler(MessageHandler(command_gacha, filters.command(['gacha', 'chou']) & filters.group))
 
     return logging.info('[handlers.register register_handlers]\tHandlers registered')
 

@@ -33,3 +33,8 @@ DOWN_ICON = '🟢'
 STILL_ICON = '⚪'
 RISE_ICON = '🔼'
 FALL_ICON = '🔽'
+
+
+# gacha
+# # genshin
+GACHA_GENSHIN_CMD = ['genshin', 'yuanshen', '原神', 'gs', 'ys', 'gi']
