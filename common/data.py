@@ -48,4 +48,6 @@ GACHA_ARKNIGHTS_CMD = ['arknights', '方舟', '明日方舟', 'ark', 'mrfz', 'fz
 LOADING_ARKNIGHTS = 'AgACAgUAAxkBAAMKZW8yztd5Nux3qoyXotgaTjFapkgAApm7MRtbkHhXIHKInNaQDMoACAEAAwIAA3kABx4E'
 
 # # groupmem
+USER_PHOTO_DIR = 'data/groupmem'
+USER_PHOTO_FILE = 'photo.p'
 GACHA_GROUPMEM_CMD = ['groupmem', '群老婆', 'qlp', 'lp', 'group']

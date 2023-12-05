@@ -9,8 +9,7 @@ class GroupMembers:
 
     def update(self, chat_id: int, members: List[ChatMember]):
         self.groups[chat_id] = {
-            'members': members,
-            'photos': {}
+            'members': members
         }
 
 

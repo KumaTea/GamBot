@@ -11,7 +11,7 @@ def mkdir_p(paths: list):
 
 
 def starting():
-    mkdir_p([STOCK_DATA_PATH])
+    mkdir_p([STOCK_DATA_PATH, USER_PHOTO_DIR])
     clear_cache()
     register_handlers()
     # add_jobs()

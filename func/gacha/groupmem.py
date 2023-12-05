@@ -1,8 +1,9 @@
+import asyncio
 import logging
 from typing import Optional
 from pyrogram import Client
 from common.data import bl_users
-from func.gacha.tools import result_sender
+from gacha.groupmem.store import user_photos
 from gacha.groupmem.main import grp_data, gacha
 from pyrogram.types import User, Message, ChatMember
 from bot.raw import get_user_profile_photo, send_photo
@@ -25,12 +26,12 @@ def get_user_name(user: User):
 
 def is_qualified_user(member: ChatMember):
     user = member.user
-    check_1 = user.id not in bl_users
-    # check_2 = not user.is_bot
-    check_3 = not user.is_deleted
-    check_4 = user.photo
-    check_5 = user.username
-    return all([check_1, check_3, check_4, check_5])
+    not_bl = user.id not in bl_users
+    not_me = not user.is_self
+    is_live = not user.is_deleted
+    has_pic = user.photo
+    has_un = user.username
+    return not_bl and not_me and is_live and has_pic and has_un
 
 
 async def retrieve_group_members(client: Client, message: Message):
@@ -42,31 +43,54 @@ async def retrieve_group_members(client: Client, message: Message):
     grp_data.update(chat_id, members)
 
 
+async def run_pic_bot(chat_id: int):
+    command = '/opt/conda/envs/jd/bin/python3 propicbot.py --chat-id ' + str(chat_id)
+    proc = await asyncio.create_subprocess_shell(
+        command,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE
+    )
+    # don't wait
+    return proc
+
+
 async def gacha_group_member(client: Client, message: Message) -> Optional[Message]:
     chat_id = message.chat.id
     if chat_id not in grp_data.groups:
-        await retrieve_group_members(client, message)
+        await asyncio.gather(
+            retrieve_group_members(client, message),
+            run_pic_bot(chat_id)
+        )
     member = gacha(chat_id)
     user = member.user
     name = get_user_name(user)
 
-    if user.id in grp_data.groups[chat_id]['photos']:
-        photo = grp_data.groups[chat_id]['photos'][user.id]
+    photo = None
+    raw_photo = None
+    if user.id in user_photos.photos:
+        photo = user_photos.photos[user.id]
     else:
-        photo = await get_user_profile_photo(user.id)
-        if photo:
-            grp_data.groups[chat_id]['photos'][user.id] = photo
+        raw_photo = await get_user_profile_photo(user.id)
 
+    logging.info(f'func.gacha.grp\t{name=}')
+    msg_text = f'恭喜你抽中了群老婆 **{name}**！'
     if photo:
-        logging.info(f'func.gacha.grp\t{name=}')
-        msg_text = f'恭喜你抽中了群老婆 **{name}**！'
-        await send_photo(
-            chat_id=message.chat.id,
+        return await message.reply_photo(
             photo=photo,
-            caption=msg_text.replace('**', '*'),
-            parse_mode='MarkdownV2'
+            caption=msg_text
         )
     else:
-        msg_text = f'你抽中了 {name}，但是他不肯出来露脸，你可以重新抽一个。'
-        return await message.reply_text(msg_text, quote=False)
-
+        if raw_photo:
+            data = await send_photo(
+                chat_id=message.chat.id,
+                photo=photo,
+                caption=msg_text.replace('**', '*'),
+                parse_mode='MarkdownV2'
+            )
+            if data['ok']:
+                file_id = data['result']['photo'][0]['file_id']
+                user_photos.update(user.id, file_id)
+                return None
+        else:
+            msg_text = f'你抽中了 {name}，但是他不肯出来露脸，你可以重新抽一个。'
+            return await message.reply_text(msg_text, quote=False)
