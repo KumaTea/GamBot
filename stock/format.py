@@ -1,4 +1,5 @@
 from stock.req import *
+from common.data import *
 from stock.tools import is_trading_time
 
 
@@ -34,7 +35,13 @@ def get_detailed_summary(stock_details: dict, trading: bool = None) -> str:
         message = '当前股市已休市\n'
         message += '上证指数收盘时 {PRICE_INFO}\n'
         message += '当日 {HISTORY_INFO}\n{PEAK_INFO}\n'
-    price_info = '**{当前:.2f}**\n{涨跌:.2f} {涨跌幅:.2%}'.format(**stock_details)
+    fluctuation = RISE_ICON if stock_details['涨跌'] > 0 else FALL_ICON
+    price_info = '**{当前:.2f}**\n{FL} {涨跌:.2f} {涨跌幅:.2%}'.format(
+        当前=stock_details['当前'],
+        涨跌=stock_details['涨跌'],
+        涨跌幅=stock_details['涨跌幅'],
+        FL=fluctuation
+    )
     history_info = '今开 {今开:.2f} 昨收 {昨收:.2f}'.format(**stock_details)
     peak_info = '最高 {最高:.2f} 最低 {最低:.2f}'.format(**stock_details)
     message = message.format(PRICE_INFO=price_info, HISTORY_INFO=history_info, PEAK_INFO=peak_info)
@@ -42,7 +49,12 @@ def get_detailed_summary(stock_details: dict, trading: bool = None) -> str:
 
 
 def get_stock_short_summary(stock_details: dict) -> str:
-    message = '{当前:.2f} {涨跌幅:.2%}'.format(**stock_details)
+    fluctuation = RISE_ICON if stock_details['涨跌'] > 0 else FALL_ICON
+    message = '{当前:.2f} {FL} {涨跌幅:.2%}'.format(
+        当前=stock_details['当前'],
+        涨跌幅=stock_details['涨跌幅'],
+        FL=fluctuation
+    )
     return message
 
 

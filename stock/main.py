@@ -21,8 +21,7 @@ async def get_stock_summary(trading: bool = None):
     sz_sum = get_stock_short_summary(sz_d)
     cyb_sum = get_stock_short_summary(cyb_d)
     stock_summary = (
-        f'{sh_sum}\n'
-        f'深：{sz_sum}  创：{cyb_sum}'
+        f'{sh_sum}\n深 {sz_sum}\n创 {cyb_sum}'
     )
     return stock_summary
 

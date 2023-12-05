@@ -31,5 +31,5 @@ UPDOWN_API = 'https://hq.sinajs.cn/list=sh000002_zdp,sz399107_zdp,sh000003_zdp,s
 UP_ICON = '🔴'
 DOWN_ICON = '🟢'
 STILL_ICON = '⚪'
-RISE_ICON = '🔺'
-FALL_ICON = '🔻'
+RISE_ICON = '🔼'
+FALL_ICON = '🔽'
