@@ -1,4 +1,5 @@
 import aiohttp
+import logging
 from bot.session import config
 
 
@@ -31,7 +32,13 @@ async def send_photo(chat_id: int, photo: str, caption: str = None, parse_mode: 
         'caption': caption,
         'parse_mode': parse_mode
     }
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url, params=params) as resp:
-            data = await resp.json()
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, params=params) as resp:
+                data = await resp.json()
+    except TypeError as e:
+        logging.error(f'bot.raw.send_photo\t{e=}')
+        logging.error(f'{url=} {params=}')
+        logging.error(f'{data=}')
+        data = None
     return data
