@@ -8,6 +8,7 @@ from pyrogram.errors.exceptions.bad_request_400 import WebpageCurlFailed
 
 async def gacha_genshin(client: Client, message: Message) -> Message:
     name, image, gacha_type, type_str = gacha()
+    logging.info(f'func.gacha.gs\t{name=}')
     msg_text = f'恭喜你抽中了原神 {type_str} **{name}**！'
     try:
         reply = await message.reply_photo(

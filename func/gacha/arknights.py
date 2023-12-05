@@ -8,10 +8,14 @@ from pyrogram.errors.exceptions.bad_request_400 import WebpageCurlFailed
 
 async def gacha_arknights(client: Client, message: Message) -> Message:
     name, image, rarity = gacha()
+    logging.info(f'func.gacha.ark\t{name=}')
     char_info = ark_data.char[name]
     char_group = char_info['group']
     char_class = char_info['class']
     char_branch = char_info['branch']
+
+    if len(char_group) == 1:
+        char_group = char_group + '国'
     limited = ''
     if '限定寻访' in char_info['approach']:
         limited = '限定'

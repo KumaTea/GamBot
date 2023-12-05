@@ -37,12 +37,12 @@ for r in range(1, 7):
     ops_by_rarity[r] = [name for name in ark_data.char if ark_data.char[name]['rarity'] == r]
 
 gacha_rate = {
-    1: 0.8 / 2 / 3,
-    2: 0.8 / 2 / 3,
-    3: 0.8 / 2 / 3,
-    4: 0.8 / 2,
-    5: 0.15,
-    6: 0.05
+    1: 0.03,
+    2: 0.05,
+    3: 0.3,
+    4: 0.35,
+    5: 0.2,
+    6: 0.08
 }
 
 
