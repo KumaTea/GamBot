@@ -2,8 +2,8 @@ import logging
 from pyrogram import Client
 from pyrogram.types import Message
 from common.data import LOADING_GENSHIN
-from gacha.genshin.main import ys_data, gacha
 from func.gacha.tools import result_sender
+from gacha.genshin.main import ys_data, gacha
 
 
 async def gacha_genshin(client: Client, message: Message) -> Message:

@@ -1,16 +1,18 @@
 import random
+from common.data import *
 from pyrogram import Client
 from bot.auth import ensure_not_bl
 from pyrogram.types import Message
+from bot.tools import get_command_content
 from func.gacha.genshin import gacha_genshin
 from func.gacha.arknights import gacha_arknights
-from common.data import *
-from bot.tools import get_command_content
+from func.gacha.groupmem import gacha_group_member
 
 
 pools = {
     'genshin': GACHA_GENSHIN_CMD,
     'arknights': GACHA_ARKNIGHTS_CMD,
+    'groupmem': GACHA_GROUPMEM_CMD
 }
 
 
@@ -30,5 +32,7 @@ async def command_gacha(client: Client, message: Message) -> Message:
         return await gacha_genshin(client, message)
     elif match == 'arknights':
         return await gacha_arknights(client, message)
+    elif match == 'groupmem':
+        return await gacha_group_member(client, message)
 
     return await message.reply_text('找不到指定的池子！', quote=False)
