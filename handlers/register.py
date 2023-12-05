@@ -3,12 +3,16 @@ from bot.session import bot
 from pyrogram import filters
 from handlers.functions import *
 from pyrogram.handlers import MessageHandler
+from handlers.messages import private_message
 
 
 def register_handlers():
     # group commands
     bot.add_handler(MessageHandler(command_stock, filters.command(['stock']) & filters.group))
     bot.add_handler(MessageHandler(command_gacha, filters.command(['gacha', 'chou']) & filters.group))
+
+    # messages
+    bot.add_handler(MessageHandler(private_message, filters.private))
 
     return logging.info('[handlers.register register_handlers]\tHandlers registered')
 

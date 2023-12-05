@@ -36,6 +36,12 @@ FALL_ICON = '🔽'
 
 
 # gacha
+
+LOADING_DEFAULT = 'AgACAgUAAxkBAAMGZW8yOiTRz6gW2CvtXOn4eTqqit8AAi68MRvj_XlXULp0igotjbgACAEAAwIAA3gABx4E'
+
 # # genshin
 GACHA_GENSHIN_CMD = ['genshin', 'yuanshen', '原神', 'gs', 'ys', 'gi']
+LOADING_GENSHIN = 'AgACAgUAAxkBAAMIZW8yh3HdhNmpzgnc8nczPGZeeq8AApe7MRtbkHhXEJyXoUvTpHoACAEAAwIAA3kABx4E'
+
 GACHA_ARKNIGHTS_CMD = ['arknights', '方舟', '明日方舟', 'ark', 'mrfz', 'fz']
+LOADING_ARKNIGHTS = 'AgACAgUAAxkBAAMKZW8yztd5Nux3qoyXotgaTjFapkgAApm7MRtbkHhXIHKInNaQDMoACAEAAwIAA3kABx4E'
