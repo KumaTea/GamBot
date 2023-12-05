@@ -1,3 +1,4 @@
+import random
 from pyrogram import Client
 from bot.auth import ensure_not_bl
 from pyrogram.types import Message
@@ -17,13 +18,14 @@ pools = {
 async def command_gacha(client: Client, message: Message) -> Message:
     content = get_command_content(message)
     if not content:
-        return await message.reply_text('你没有指定池子！', quote=False)
-
-    match = ''
-    content = content.lower()
-    for pool in pools:
-        if content in pools[pool]:
-            match = pool
+        # return await message.reply_text('你没有指定池子！', quote=False)
+        match = random.choice(list(pools.keys()))
+    else:
+        match = None
+        content = content.lower()
+        for pool in pools:
+            if content in pools[pool]:
+                match = pool
     if match == 'genshin':
         return await gacha_genshin(client, message)
     elif match == 'arknights':

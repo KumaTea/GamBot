@@ -38,4 +38,4 @@ FALL_ICON = '🔽'
 # gacha
 # # genshin
 GACHA_GENSHIN_CMD = ['genshin', 'yuanshen', '原神', 'gs', 'ys', 'gi']
-GACHA_ARKNIGHTS_CMD = ['arknights', 'fangzhou', 'ark', 'mrfz']
+GACHA_ARKNIGHTS_CMD = ['arknights', '方舟', '明日方舟', 'ark', 'mrfz', 'fz']
