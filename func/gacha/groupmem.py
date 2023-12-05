@@ -82,7 +82,7 @@ async def gacha_group_member(client: Client, message: Message) -> Optional[Messa
         if raw_photo:
             data = await send_photo(
                 chat_id=message.chat.id,
-                photo=photo,
+                photo=raw_photo,
                 caption=msg_text.replace('**', '*'),
                 parse_mode='MarkdownV2'
             )

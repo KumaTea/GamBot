@@ -18,7 +18,7 @@ async def get_image(url: str) -> BytesIO:
 
 
 async def result_sender(incoming_msg: Message, text: str, image: str, loading_img: str = LOADING_DEFAULT) -> Message:
-    if 'http' in image:
+    if 'https://' in image:
         loading = await incoming_msg.reply_photo(
             photo=loading_img,
             quote=False,
@@ -41,18 +41,9 @@ async def result_sender(incoming_msg: Message, text: str, image: str, loading_im
                 )
             )
     else:
-        try:
-            reply = await incoming_msg.reply_photo(
-                photo=image,
-                quote=False,
-                caption=text
-            )
-        except WebpageCurlFailed:
-            logging.error(f'Telegram server failed to get {image=}')
-            img_bytes = await get_image(image)
-            reply = await incoming_msg.reply_photo(
-                photo=img_bytes,
-                quote=False,
-                caption=text
-            )
+        reply = await incoming_msg.reply_photo(
+            photo=image,
+            quote=False,
+            caption=text
+        )
     return reply
