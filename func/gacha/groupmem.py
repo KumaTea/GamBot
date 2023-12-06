@@ -61,7 +61,7 @@ async def gacha_group_member(client: Client, message: Message) -> Optional[Messa
         )
     member = gacha(chat_id)
     user = member.user
-    name = get_user_name(user)
+    name = member.custom_title or get_user_name(user)
 
     photo = None
     raw_photo = None
@@ -73,23 +73,25 @@ async def gacha_group_member(client: Client, message: Message) -> Optional[Messa
     logging.info(f'func.gacha.grp\t{name=}')
     msg_text = f'恭喜你抽中了群老婆 **{name}**！'
     if photo:
-        return await message.reply_photo(
-            photo=photo,
-            caption=msg_text,
-            quote=False
-        )
-    else:
-        if raw_photo:
-            data = await send_photo(
-                chat_id=message.chat.id,
-                photo=raw_photo,
-                caption=msg_text.replace('**', '*'),
-                parse_mode='MarkdownV2'
+        try:
+            return await message.reply_photo(
+                photo=photo,
+                caption=msg_text,
+                quote=False
             )
-            if data['ok']:
-                file_id = data['result']['photo'][0]['file_id']
-                user_photos.update(user.id, file_id)
-                return None
-        else:
-            msg_text = f'你抽中了 {name}，但是他不肯出来露脸，你可以重新抽一个。'
-            return await message.reply_text(msg_text, quote=False)
+        except ValueError:
+            raw_photo = photo
+    if raw_photo:
+        data = await send_photo(
+            chat_id=message.chat.id,
+            photo=raw_photo,
+            caption=msg_text.replace('**', '*'),
+            parse_mode='MarkdownV2'
+        )
+        if data['ok']:
+            file_id = data['result']['photo'][0]['file_id']
+            user_photos.update(user.id, file_id)
+            return None
+    else:
+        msg_text = f'你抽中了 {name}，但是他不肯出来露脸，你可以重新抽一个。'
+        return await message.reply_text(msg_text, quote=False)

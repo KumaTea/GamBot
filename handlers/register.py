@@ -11,6 +11,9 @@ def register_handlers():
     bot.add_handler(MessageHandler(command_stock, filters.command(['stock']) & filters.group))
     bot.add_handler(MessageHandler(command_gacha, filters.command(['gacha', 'chou']) & filters.group))
 
+    # admin commands
+    bot.add_handler(MessageHandler(force_refresh, filters.command(['refresh']) & filters.group))
+
     # messages
     bot.add_handler(MessageHandler(private_message, filters.private))
 
