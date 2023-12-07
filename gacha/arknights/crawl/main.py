@@ -90,7 +90,8 @@ def get_op_data(name: str):
         'branch': branch,
         'initial': initial,
         'promoted': promoted,
-        'skins': skins
+        'skins': skins,
+        'others': []
     }
     return data
 

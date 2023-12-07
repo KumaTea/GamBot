@@ -59,5 +59,6 @@ def gacha():
     if char_data['promoted']:
         images.append(char_data['promoted'])
     images.extend(char_data['skins'])
+    images.extend(char_data['others'])
     image = random.choice(images)
     return char, image, rarity
