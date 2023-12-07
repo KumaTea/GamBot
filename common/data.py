@@ -1,10 +1,13 @@
-from common.info import *
-
 try:
     from local_db import trusted_group, bl_users
 except ImportError:
     trusted_group = []
     bl_users = []
+
+
+# common
+
+PHOTO_COMMIT_MSG = 'commit user photo'
 
 
 # stock
@@ -46,3 +49,7 @@ LOADING_ARKNIGHTS = 'AgACAgUAAxkBAAMKZW8yztd5Nux3qoyXotgaTjFapkgAApm7MRtbkHhXIHK
 USER_PHOTO_DIR = 'data/groupmem'
 USER_PHOTO_FILE = 'photo.p'
 GACHA_GROUPMEM_CMD = ['groupmem', '群老婆', 'qlp', 'lp', 'group']
+
+# games
+
+BACCARAT_RULE = 'https://zh.wikipedia.org/wiki/%E7%99%BE%E5%AE%B6%E6%A8%82#%E8%A3%9C%E7%89%8C%E8%A6%8F%E5%89%87'

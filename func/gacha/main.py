@@ -4,6 +4,7 @@ from common.data import *
 from pyrogram import Client
 from bot.auth import ensure_not_bl
 from pyrogram.types import Message
+from common.info import administrators
 from bot.tools import get_command_content
 from func.gacha.genshin import gacha_genshin
 from func.gacha.arknights import gacha_arknights

@@ -9,9 +9,10 @@ class UserPhotoStore:
         self.groups = []
         self.load()
 
-    def save(self, user_id: int, file_id: str):
+    def save(self, user_id: int, file_id: str, dump: bool = False):
         self.photos[user_id] = file_id
-        self.dump()
+        if dump:
+            self.dump()
 
     def get(self, user_id: int) -> str:
         return self.photos.get(user_id)

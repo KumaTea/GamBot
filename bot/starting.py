@@ -14,4 +14,4 @@ def starting():
     register_handlers()
     # add_jobs()
 
-    return logging.info("[bot.starting starting]\tGamBot Initialized.")
+    return logging.info('[bot.starting starting]\tGamBot Initialized.')
