@@ -1,6 +1,18 @@
-import os
-from common.data import *
 from datetime import datetime, time
+
+
+class StockData:
+    def __init__(self):
+        self.stock_summary = ''
+        self.updown_bar = ''
+        self.price_img_id = ''
+        self.last_timestamp = 0
+
+    def save(self, stock_summary: str, updown_bar: str, price_img_id: str):
+        self.stock_summary = stock_summary
+        self.updown_bar = updown_bar
+        self.price_img_id = price_img_id
+        self.last_timestamp = int(time())
 
 
 def is_trading_day() -> bool:
@@ -19,17 +31,3 @@ def is_trading_time() -> bool:
     afternoon_start = time(13, 0)
     afternoon_end = time(15, 0)
     return morning_start <= now <= morning_end or afternoon_start <= now <= afternoon_end
-
-
-def save_cache(stock_summary: str, updown_bar: str, price_img_id: str):
-    with open(f'{STOCK_DATA_PATH}/{STOCK_DATA_SUMMARY}', 'w', encoding='utf-8') as f:
-        f.write(stock_summary)
-    with open(f'{STOCK_DATA_PATH}/{STOCK_DATA_UPDOWN}', 'w', encoding='utf-8') as f:
-        f.write(updown_bar)
-    with open(f'{STOCK_DATA_PATH}/{STOCK_DATA_PRICE_IMG}', 'w', encoding='utf-8') as f:
-        f.write(price_img_id)
-
-
-def clear_cache():
-    for file in os.listdir(STOCK_DATA_PATH):
-        os.remove(f'{STOCK_DATA_PATH}/{file}')

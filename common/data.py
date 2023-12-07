@@ -9,11 +9,6 @@ except ImportError:
 
 # stock
 
-STOCK_DATA_PATH = 'data/stock'
-STOCK_DATA_SUMMARY = 'summary.txt'
-STOCK_DATA_UPDOWN = 'updown.txt'
-STOCK_DATA_PRICE_IMG = 'image.txt'  # we are saving photo id
-
 SINA_HEADER = {
     'Referer': 'https://finance.sina.com.cn/realstock/company/sh000001/nc.shtml'
 }

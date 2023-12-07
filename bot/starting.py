@@ -1,7 +1,6 @@
 import os
 import logging
 from common.data import *
-from stock.tools import clear_cache
 from handlers.register import register_handlers  # , add_jobs
 
 
@@ -11,8 +10,7 @@ def mkdir_p(paths: list):
 
 
 def starting():
-    mkdir_p([STOCK_DATA_PATH, USER_PHOTO_DIR])
-    clear_cache()
+    mkdir_p([USER_PHOTO_DIR])
     register_handlers()
     # add_jobs()
 

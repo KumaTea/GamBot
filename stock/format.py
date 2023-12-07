@@ -1,4 +1,3 @@
-from stock.req import *
 from common.data import *
 from stock.tools import is_trading_time
 

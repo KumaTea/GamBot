@@ -1,11 +1,11 @@
 import os
 import asyncio
-import aiohttp
-from PIL import Image
-from io import BytesIO
-from common.data import *
+from stock.req import *
 from stock.format import *
-from datetime import datetime, time
+from stock.tools import StockData
+
+
+stock_cache = StockData()
 
 
 async def get_stock_summary(trading: bool = None):
@@ -38,18 +38,10 @@ async def query_data(trading: bool = None) -> tuple:
 
 async def get_cache(trading: bool = None) -> tuple:
     price_img = None
-    price_img_id = ''
-    if all([
-        os.path.isfile(f'{STOCK_DATA_PATH}/{STOCK_DATA_SUMMARY}'),
-        os.path.isfile(f'{STOCK_DATA_PATH}/{STOCK_DATA_UPDOWN}'),
-        os.path.isfile(f'{STOCK_DATA_PATH}/{STOCK_DATA_PRICE_IMG}')
-    ]):
-        with open(f'{STOCK_DATA_PATH}/{STOCK_DATA_SUMMARY}', 'r', encoding='utf-8') as f:
-            stock_summary = f.read()
-        with open(f'{STOCK_DATA_PATH}/{STOCK_DATA_UPDOWN}', 'r', encoding='utf-8') as f:
-            updown_bar = f.read()
-        with open(f'{STOCK_DATA_PATH}/{STOCK_DATA_PRICE_IMG}', 'r', encoding='utf-8') as f:
-            price_img_id = f.read()
+    stock_summary = stock_cache.stock_summary
+    updown_bar = stock_cache.updown_bar
+    price_img_id = stock_cache.price_img_id or ''
+    if all([stock_summary, updown_bar, price_img_id]):
         return stock_summary, updown_bar, price_img, price_img_id
     else:
         raw_data = await query_data(trading)
