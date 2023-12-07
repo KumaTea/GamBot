@@ -1,3 +1,4 @@
+from time import time as timestamp
 from datetime import datetime, time
 
 
@@ -12,7 +13,7 @@ class StockData:
         self.stock_summary = stock_summary
         self.updown_bar = updown_bar
         self.price_img_id = price_img_id
-        self.last_timestamp = int(time())
+        self.last_timestamp = int(timestamp())
 
 
 def is_trading_day() -> bool:
