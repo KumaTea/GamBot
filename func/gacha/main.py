@@ -39,6 +39,21 @@ async def command_gacha(client: Client, message: Message) -> Message:
     return await message.reply_text('找不到指定的池子！', quote=False)
 
 
+@ensure_not_bl
+async def command_gacha_genshin(client: Client, message: Message) -> Message:
+    return await gacha_genshin(client, message)
+
+
+@ensure_not_bl
+async def command_gacha_arknights(client: Client, message: Message) -> Message:
+    return await gacha_arknights(client, message)
+
+
+@ensure_not_bl
+async def command_gacha_groupmem(client: Client, message: Message) -> Message:
+    return await gacha_group_member(client, message)
+
+
 # no need to ensure_not_bl
 async def force_refresh(client: Client, message: Message):
     chat_id = message.chat.id
