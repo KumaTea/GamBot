@@ -2,8 +2,8 @@ from typing import List
 from propic.session import me
 from bot.session import logging
 from common.info import self_id
-from common.data import bl_users
 from telethon.tl.types import User
+from common.data import bl_users, PHOTO_COMMIT_MSG
 
 
 def is_qualified_user(user: User) -> bool:
@@ -39,3 +39,5 @@ async def send_chat_member_photos(chat_id: int):
         if photo:
             await me.send_file(self_id, photo, caption=str(user.id))
             logging.info(f'propic.query\t{user.id=}')
+    await me.send_message(self_id, PHOTO_COMMIT_MSG)
+    logging.info('propic.query\tDone')

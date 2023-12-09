@@ -2,10 +2,10 @@ import asyncio
 import logging
 from typing import Optional
 from pyrogram import Client
-from common.data import bl_users
 from bot.tools import get_user_name
 from gacha.groupmem.store import user_photos
 from pyrogram.types import Message, ChatMember
+from common.data import bl_users, trusted_group
 from gacha.groupmem.main import grp_data, gacha
 from bot.raw import get_user_profile_photo, send_photo
 
@@ -30,7 +30,7 @@ async def retrieve_group_members(client: Client, message: Message):
 
 
 async def run_pic_bot(chat_id: int, forced: bool = False):
-    if forced or chat_id not in user_photos.groups:
+    if forced or (chat_id not in user_photos.groups and chat_id in trusted_group):
         command = '/opt/conda/envs/jd/bin/python3 propicbot.py --chat-id ' + str(chat_id)
         proc = await asyncio.create_subprocess_shell(command)
         user_photos.register_group(chat_id)
@@ -56,8 +56,13 @@ async def gacha_group_member(client: Client, message: Message) -> Optional[Messa
     else:
         raw_photo = await get_user_profile_photo(user.id)
 
+    if user.is_bot:
+        user_type = '机器'
+    else:
+        user_type = '群'
+
     logging.info(f'func.gacha.grp\t{name=}')
-    msg_text = f'恭喜你抽中了群老婆 **{name}**！'
+    msg_text = f'恭喜你抽中了{user_type}老婆 **{name}**！'
     if photo:
         try:
             return await message.reply_photo(

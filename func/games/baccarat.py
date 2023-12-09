@@ -2,12 +2,12 @@ import random
 import asyncio
 from typing import Optional
 from pyrogram import Client
-from pyrogram.types import Message, Chat
 from games.cards.baccarat import *
-from func.games.share import game_status
-from games.cards.card import generate_deck
 from bot.tools import get_user_name
 from common.data import BACCARAT_RULE
+from pyrogram.types import Message, Chat
+from func.games.share import game_status
+from games.cards.card import generate_deck
 
 
 class GameTable:
