@@ -40,7 +40,7 @@ async def get_cache(trading: bool = None) -> tuple:
     price_img = None
     stock_summary = stock_cache.stock_summary
     updown_bar = stock_cache.updown_bar
-    price_img_id = stock_cache.price_img_id or ''
+    price_img_id = stock_cache.price_img_id
     if all([stock_summary, updown_bar, price_img_id]):
         return stock_summary, updown_bar, price_img, price_img_id
     else:

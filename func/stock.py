@@ -15,6 +15,8 @@ async def command_stock(client: Client, message: Message) -> Message:
         no_cache = True
     elif now_timestamp - stock_cache.last_timestamp > 2 * 60 * 60:  # 2 hours
         no_cache = True
+    elif trading != stock_cache.trading:
+        no_cache = True
     stock_summary, updown_bar, price_img, price_img_id = await query(trading, no_cache)
     text = f'{stock_summary}\n\n{updown_bar}'
     if price_img:
