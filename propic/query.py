@@ -2,8 +2,9 @@ from typing import List
 from propic.session import me
 from bot.session import logging
 from common.info import self_id
+from common.local import bl_users
 from telethon.tl.types import User
-from common.data import bl_users, PHOTO_COMMIT_MSG
+from common.data import PHOTO_COMMIT_MSG
 
 
 def is_qualified_user(user: User) -> bool:

@@ -1,10 +1,3 @@
-try:
-    from local_db import trusted_group, bl_users
-except ImportError:
-    trusted_group = []
-    bl_users = []
-
-
 # common
 
 PHOTO_COMMIT_MSG = 'commit user photo'

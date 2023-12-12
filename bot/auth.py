@@ -1,7 +1,7 @@
 import logging
 from typing import Union
 from pyrogram import Client
-from common.data import bl_users
+from common.local import bl_users
 from pyrogram.types import Message, CallbackQuery
 
 

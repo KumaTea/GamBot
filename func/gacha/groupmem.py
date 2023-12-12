@@ -5,8 +5,8 @@ from pyrogram import Client
 from bot.tools import get_user_name
 from gacha.groupmem.store import user_photos
 from pyrogram.types import Message, ChatMember
-from common.data import bl_users, trusted_group
 from gacha.groupmem.main import grp_data, gacha
+from common.local import bl_users, trusted_group
 from bot.raw import get_user_profile_photo, send_photo
 
 
