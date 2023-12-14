@@ -8,7 +8,7 @@ from gacha.genshin.main import ys_data, gacha
 
 async def gacha_genshin(client: Client, message: Message) -> Message:
     name, image, gacha_type, type_str = gacha()
-    logging.info(f'func.gacha.gs\t{name=}')
+    logging.info(f'{name=}')
     msg_text = f'恭喜你抽中了原神 {type_str} **{name}**！'
     reply = await result_sender(
         incoming_msg=message,

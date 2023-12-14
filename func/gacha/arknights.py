@@ -8,7 +8,7 @@ from gacha.arknights.main import ark_data, gacha
 
 async def gacha_arknights(client: Client, message: Message) -> Message:
     name, image, rarity = gacha()
-    logging.info(f'func.gacha.ark\t{name=}')
+    logging.info(f'{name=}')
     char_info = ark_data.char[name]
     char_group = char_info['group']
     char_class = char_info['class']

@@ -1,14 +1,16 @@
-import os
 import asyncio
-from stock.req import *
-from stock.format import *
-from stock.tools import StockData
+from io import BytesIO
+from typing import Tuple, Optional
+from stock.tools import StockData, StockReminder, is_trading_time
+from stock.req import get_raw_price, get_raw_updown, get_price_img
+from stock.format import get_stock_details, get_detailed_summary, get_stock_short_summary, get_updown_bar, get_updown
 
 
 stock_cache = StockData()
+stock_reminder = StockReminder()
 
 
-async def get_stock_summary(trading: bool = None):
+async def get_stock_summary(trading: bool = None) -> str:
     sh_raw, sz_raw, cyb_raw = await asyncio.gather(
         get_raw_price('sh000001'),
         get_raw_price('sz399001'),
@@ -26,7 +28,7 @@ async def get_stock_summary(trading: bool = None):
     return stock_summary
 
 
-async def query_data(trading: bool = None) -> tuple:
+async def query_data(trading: bool = None) -> Tuple[str, str, BytesIO]:
     stock_summary, raw_updown, price_img = await asyncio.gather(
         get_stock_summary(trading),
         get_raw_updown(),
@@ -36,7 +38,7 @@ async def query_data(trading: bool = None) -> tuple:
     return stock_summary, updown_bar, price_img
 
 
-async def get_cache(trading: bool = None) -> tuple:
+async def get_cache(trading: bool = None) -> Tuple[str, str, Optional[BytesIO], Optional[str]]:
     price_img = None
     stock_summary = stock_cache.stock_summary
     updown_bar = stock_cache.updown_bar
@@ -49,7 +51,7 @@ async def get_cache(trading: bool = None) -> tuple:
         return stock_summary, updown_bar, price_img, price_img_id
 
 
-async def query(trading: bool = None, no_cache: bool = False) -> tuple:
+async def query(trading: bool = None, no_cache: bool = False) -> Tuple[str, str, Optional[BytesIO], Optional[str]]:
     price_img_id = ''
     if trading is None:
         trading = is_trading_time()

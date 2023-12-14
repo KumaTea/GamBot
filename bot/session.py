@@ -1,13 +1,13 @@
 import logging
 import configparser
 from pyrogram import Client
-# from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 
 logging.basicConfig(
-    format='%(asctime)s %(levelname)-8s %(message)s',
+    format='%(asctime)s %(levelname)-8s %(filename)15s:%(lineno)3s %(funcName)20s> %(message)s',
     level=logging.INFO,
-    datefmt='%Y-%m-%d %H:%M:%S')
+    datefmt='%m-%d %H:%M:%S')
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -18,4 +18,4 @@ bot = Client(
     bot_token=config['jd']['bot_token'],
 )
 
-# scheduler = AsyncIOScheduler()
+scheduler = AsyncIOScheduler()

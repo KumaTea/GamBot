@@ -1,5 +1,5 @@
-from common.data import *
 from stock.tools import is_trading_time
+from common.data import RISE_ICON, FALL_ICON, UP_ICON, DOWN_ICON, STILL_ICON
 
 
 def get_stock_details(raw_price: str) -> dict:
@@ -31,7 +31,7 @@ def get_detailed_summary(stock_details: dict, trading: bool = None) -> str:
         message += '上证指数当前 {PRICE_INFO}\n'
         message += '今日 {HISTORY_INFO}\n{PEAK_INFO}\n'
     else:
-        message = '当前股市已休市\n'
+        message = '当前股市 **已休市**\n'
         message += '上证指数收盘时 {PRICE_INFO}\n'
         message += '当日 {HISTORY_INFO}\n{PEAK_INFO}\n'
     fluctuation = RISE_ICON if stock_details['涨跌'] > 0 else FALL_ICON

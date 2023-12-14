@@ -1,7 +1,7 @@
 import aiohttp
 from PIL import Image
 from io import BytesIO
-from common.data import *
+from common.data import STOCK_PRICE_API, UPDOWN_API, STOCK_PRICE_IMG, SINA_HEADER
 
 
 async def get_raw_price(stock_code: str) -> str:

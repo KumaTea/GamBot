@@ -39,6 +39,6 @@ async def send_chat_member_photos(chat_id: int):
         photo = await get_user_photo(user)
         if photo:
             await me.send_file(self_id, photo, caption=str(user.id))
-            logging.info(f'propic.query\t{user.id=}')
+            logging.info(f'{user.id=}')
     await me.send_message(self_id, PHOTO_COMMIT_MSG)
-    logging.info('propic.query\tDone')
+    logging.info('Done')

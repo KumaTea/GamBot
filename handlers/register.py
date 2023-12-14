@@ -1,14 +1,18 @@
 import logging
-from bot.session import bot
 from pyrogram import filters
 from handlers.functions import *
+from bot.session import bot, scheduler
 from pyrogram.handlers import MessageHandler
 from handlers.messages import private_message
 
 
 def register_handlers():
     # group commands
+
+    # stock
     bot.add_handler(MessageHandler(command_stock, filters.command(['stock']) & filters.group))
+    bot.add_handler(MessageHandler(command_remind_stock, filters.command(['remind_stock']) & filters.group))
+    bot.add_handler(MessageHandler(command_forget_stock, filters.command(['forget_stock']) & filters.group))
 
     # gacha
     bot.add_handler(MessageHandler(command_gacha, filters.command(['gacha']) & filters.group))
@@ -25,10 +29,10 @@ def register_handlers():
     # messages
     bot.add_handler(MessageHandler(private_message, filters.private))
 
-    return logging.info('[handlers.register register_handlers]\tHandlers registered')
+    return logging.info('Handlers registered')
 
 
-# def add_jobs():
-#     scheduler.add_job(clean, 'cron', hour=4, minute=0)
-#     scheduler.start()
-#     return logging.info('[handlers.register manager]\tapscheduler started')
+def add_jobs():
+    scheduler.add_job(remind_stock_all, 'cron', hour=14, minute=55)
+    scheduler.start()
+    return logging.info('apscheduler started')

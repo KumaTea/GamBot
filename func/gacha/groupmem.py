@@ -61,7 +61,7 @@ async def gacha_group_member(client: Client, message: Message) -> Optional[Messa
     else:
         user_type = '群'
 
-    logging.info(f'func.gacha.grp\t{name=}')
+    logging.info(f'{name=}')
     msg_text = f'恭喜你抽中了{user_type}老婆 **{name}**！'
     if photo:
         try:

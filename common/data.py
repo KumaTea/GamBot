@@ -25,6 +25,9 @@ STILL_ICON = '⚪'
 RISE_ICON = '🔼'
 FALL_ICON = '🔽'
 
+STOCK_DATA_DIR = 'data/stock'
+STOCK_REMINDER_FILE = 'reminder.p'
+
 
 # gacha
 

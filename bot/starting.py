@@ -1,7 +1,7 @@
 import os
 import logging
-from common.data import *
-from handlers.register import register_handlers  # , add_jobs
+from common.data import USER_PHOTO_DIR, STOCK_DATA_DIR
+from handlers.register import register_handlers, add_jobs
 
 
 def mkdir_p(paths: list):
@@ -10,8 +10,8 @@ def mkdir_p(paths: list):
 
 
 def starting():
-    mkdir_p([USER_PHOTO_DIR])
+    mkdir_p([USER_PHOTO_DIR, STOCK_DATA_DIR])
     register_handlers()
-    # add_jobs()
+    add_jobs()
 
-    return logging.info('[bot.starting starting]\tGamBot Initialized.')
+    return logging.info('GamBot Initialized.')
