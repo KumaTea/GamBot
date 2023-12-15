@@ -39,11 +39,11 @@ def add_boss_info(url) -> dict:
     name = get_wiki_page_name(r.text)
     image_url = get_image(name)
 
-    boss_info = {
+    info = {
         'name': name,
         'image': image_url
     }
-    return boss_info
+    return info
 
 
 def save_boss_info(all_boss_info: dict) -> None:

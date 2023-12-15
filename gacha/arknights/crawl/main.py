@@ -138,5 +138,5 @@ def save_ops_query_data(ops: dict):
 
 
 if __name__ == '__main__':
-    ops = query_ops()
-    save_ops_query_data(ops)
+    ops_data = query_ops()
+    save_ops_query_data(ops_data)

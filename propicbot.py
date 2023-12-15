@@ -12,6 +12,6 @@ async def main(chat_id: int):
 
 if __name__ == '__main__':
     args = arg_parser.parse_args()
-    chat_id = int(args.chat_id)
+    input_chat_id = int(args.chat_id)
     with holder:
-        asyncio.run(main(chat_id))
+        asyncio.run(main(input_chat_id))

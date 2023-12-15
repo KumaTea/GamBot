@@ -57,7 +57,8 @@ class StockReminder:
         return False
 
     def remove(self, chat_id: int, user: User) -> bool:
-        if chat_id in self.data and user.id in [u.id for u in self.data[chat_id]]:
+        if chat_id in self.data and any(u.id == user.id for u in self.data[chat_id]):
+            # https://t.me/teasps/6789
             self.data[chat_id].remove(user)
             if not self.data[chat_id]:
                 del self.data[chat_id]

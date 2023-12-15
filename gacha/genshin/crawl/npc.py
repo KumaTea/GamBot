@@ -68,12 +68,12 @@ def add_npc_info(url) -> dict:
     location = location_detect(r.text)
     image_url = image_detect(r.text)
 
-    npc_info = {
+    info = {
         'name': name,
         'location': location,
         'image': image_url
     }
-    return npc_info
+    return info
 
 
 def save_npc_info(all_npc_info: dict) -> None:

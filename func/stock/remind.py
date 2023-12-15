@@ -16,8 +16,10 @@ async def remind_stock(client: Client, chat_id: int) -> Optional[Message]:
     logging.info(f'Reminding stock to {chat_id}')
     stock_summary, updown_bar, price_img, price_img_id = await query_stock()
     await send_and_cache(stock_summary, updown_bar, price_img, price_img_id, client, chat_id)
-    remind_text = ' '.join(user.mention() for user in users)
+    remind_text = '🔊 '
+    remind_text += ' '.join(f'@{user.mention()}' for user in users)
     remind_text += '\n\n还有5分钟就收盘了，记得看盘调仓！'
+    remind_text += '\n\n/remind_stock 添加提醒'
     return await client.send_message(chat_id, remind_text)
 
 

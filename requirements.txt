@@ -3,3 +3,8 @@ aiohttp
 pyrogram
 telethon
 apscheduler
+
+# crawl
+tqdm
+requests
+beautifulsoup4
