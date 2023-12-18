@@ -1,5 +1,6 @@
 import re
 from typing import Optional
+from pyrogram import Client
 from pyrogram.types import Message, User
 
 
@@ -35,3 +36,9 @@ def get_user_name(user: User):
             return f'{user.first_name}{space}{user.last_name}'
     else:
         return user.first_name
+
+
+def add_client_to_user(user: User, client: Client) -> User:
+    if not getattr(user, '_client', None):
+        user._client = client
+    return user

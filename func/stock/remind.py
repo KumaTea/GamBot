@@ -7,12 +7,14 @@ from pyrogram.types import Message
 from stock.main import stock_reminder
 from stock.tools import is_trading_time
 from func.stock.tools import query_stock, send_and_cache
+from bot.tools import add_client_to_user
 
 
 async def remind_stock(client: Client, chat_id: int) -> Optional[Message]:
     users = stock_reminder.data.get(chat_id, [])
     if not users:
         return None
+    users = [add_client_to_user(user, client) for user in users]
     logging.info(f'Reminding stock to {chat_id}')
     stock_summary, updown_bar, price_img, price_img_id = await query_stock()
     await send_and_cache(stock_summary, updown_bar, price_img, price_img_id, client, chat_id)
