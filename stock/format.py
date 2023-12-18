@@ -27,12 +27,10 @@ def get_detailed_summary(stock_details: dict, trading: bool = None) -> str:
     if trading is None:
         trading = is_trading_time()
     if trading:
-        message = '当前股市 **交易中**\n'
-        message += '上证指数当前 {PRICE_INFO}\n'
+        message = '上证指数当前 {PRICE_INFO}\n'
         message += '今日 {HISTORY_INFO}\n{PEAK_INFO}\n'
     else:
-        message = '当前股市 **已休市**\n'
-        message += '上证指数收盘时 {PRICE_INFO}\n'
+        message = '上证指数收盘时 {PRICE_INFO}\n'
         message += '当日 {HISTORY_INFO}\n{PEAK_INFO}\n'
     fluctuation = RISE_ICON if stock_details['涨跌'] > 0 else FALL_ICON
     price_info = '**{当前:.2f}**\n{FL} {涨跌:.2f} {涨跌幅:.2%}'.format(

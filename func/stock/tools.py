@@ -31,7 +31,7 @@ async def send_and_cache(
         message: Message = None
 ) -> Message:
     assert (client and chat_id) or message
-    text = f'{stock_summary}\n\n{updown_bar}'
+    text = f'{stock_summary}\n{updown_bar}'
     if message:
         if price_img:
             img = await message.reply_photo(price_img, quote=False)

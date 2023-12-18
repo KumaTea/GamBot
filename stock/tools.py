@@ -74,3 +74,16 @@ class StockReminder:
     def save(self, file: str = f'{STOCK_DATA_DIR}/{STOCK_REMINDER_FILE}'):
         with open(file, 'wb') as f:
             pickle.dump(self.data, f)
+
+
+def invest_suggestion(price: float) -> str:
+    if price < 2900:
+        return '木夋口合'
+    elif price < 3000:
+        return '适当加仓'
+    elif price < 3100:
+        return '持仓观望'
+    elif price < 3200:
+        return '适当减仓'
+    else:
+        return '忄夬足包'
