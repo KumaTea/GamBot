@@ -20,10 +20,15 @@ class ArkData:
             data['initial'] = img_id
         elif data['promoted'] == url:
             data['promoted'] = img_id
-        else:
+        elif data['skins']:
             for i in range(len(data['skins'])):
                 if data['skins'][i] == url:
                     data['skins'][i] = img_id
+                    break
+        elif data['others']:
+            for i in range(len(data['others'])):
+                if data['others'][i] == url:
+                    data['others'][i] = img_id
                     break
         self.char[name] = data
         with open(operator_data_file, 'w', encoding='utf-8') as f:
