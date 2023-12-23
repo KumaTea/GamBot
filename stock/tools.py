@@ -78,7 +78,7 @@ class StockReminder:
 
 def invest_suggestion(price: float) -> str:
     if price < 2900:
-        return '木夋口合'
+        return '木夋口合' + '！' * int((2900 - price) / 100)
     elif price < 3000:
         return '适当加仓'
     elif price < 3100:
@@ -86,4 +86,4 @@ def invest_suggestion(price: float) -> str:
     elif price < 3200:
         return '适当减仓'
     else:
-        return '忄夬足包'
+        return '忄夬足包' + '！' * int((price - 3200) / 100)

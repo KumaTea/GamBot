@@ -83,8 +83,10 @@ async def start_baccarat(client: Client, message: Message) -> Optional[Message]:
     deck = game_table.groups[chat_id]
     # 第一及第三张牌发给“闲家”，第二及第四张牌则发给“庄家”。
     player_card_1 = deck.deal()
+    text += f'闲家的第一张牌是{player_card_1}。\n'
+    reply = await message_edit(reply, text, 2)
     banker_card_1 = deck.deal()
-    text += f'闲家的第一张牌是{player_card_1}，庄家的第一张牌是{banker_card_1}。\n'
+    text += f'庄家的第一张牌是{banker_card_1}。\n'
     reply = await message_edit(reply, text, 2)
     player_card_2 = deck.deal()
     banker_card_2 = deck.deal()
@@ -92,9 +94,9 @@ async def start_baccarat(client: Client, message: Message) -> Optional[Message]:
     player_value = int(str(player_value)[-1])
     banker_value = banker_card_1.value + banker_card_2.value
     banker_value = int(str(banker_value)[-1])
-    text += f'闲家的牌是{player_card_1}和{player_card_2}，总点数是{player_value}。\n'
+    text += f'闲家第二张是{player_card_2}，{player_card_1}和{player_card_2}的点数是{player_value}。\n'
     reply = await message_edit(reply, text, 2)
-    text += f'庄家的牌是{banker_card_1}和{banker_card_2}，总点数是{banker_value}。\n'
+    text += f'庄家第二张是{banker_card_2}，{banker_card_1}和{banker_card_2}的点数是{banker_value}。\n'
     reply = await message_edit(reply, text, 2)
 
     if player_value >= 8 or banker_value >= 8:
