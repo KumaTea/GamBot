@@ -5,7 +5,7 @@ FROM kumatea/bot:latest
 # Create conda environment
 RUN set -ex && \
     eval "$(/opt/conda/bin/conda shell.bash hook)" && \
-    conda create -n jd pillow aiohttp pyrogram apscheduler uvloop -y && \
+    conda create -n jd aiohttp apscheduler beautifulsoup4 pillow pyrogram uvloop -y && \
     conda clean -afy && \
     conda activate jd && \
     pip install telethon && \

@@ -6,8 +6,8 @@ from bot.session import bot
 from pyrogram.types import Message
 from stock.main import stock_reminder
 from stock.tools import is_trading_time
-from func.stock.tools import query_stock, send_and_cache
 from bot.tools import add_client_to_user
+from func.stock.tools import query_stock, send_and_cache
 
 
 async def remind_stock(client: Client, chat_id: int) -> Optional[Message]:

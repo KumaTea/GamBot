@@ -21,6 +21,7 @@ def register_handlers():
     bot.add_handler(MessageHandler(command_gacha_groupmem, filters.command(['gacha_group', 'gacha_grp', 'gacha_lp']) & filters.group))
 
     # games
+    bot.add_handler(MessageHandler(command_free, filters.command(['free', 'free_games']) & filters.group))
     bot.add_handler(MessageHandler(command_baccarat, filters.command(['baccarat', 'bjl']) & filters.group))
 
     # admin commands

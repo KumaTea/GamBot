@@ -1,3 +1,4 @@
+from func.free.main import command_free
 from func.gacha.main import command_gacha
 from func.gacha.main import force_refresh
 from func.games.main import command_baccarat
