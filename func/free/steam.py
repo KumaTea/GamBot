@@ -5,7 +5,9 @@ from bs4 import BeautifulSoup
 STEAM_FREE_URL = 'https://store.steampowered.com/search/?sort_by=Price_ASC&ignore_preferences=1&specials=1&ndl=1'
 GAMES_LIST_DIV_ID = 'search_resultsRows'
 GAME_APPID_A_FIELD = 'data-ds-appid'
+GAME_PAKID_A_FIELD = 'data-ds-packageid'
 GAME_PRICE_DIV_CLASS = 'discount_final_price'
+FREE_PRICES = ['¥0.00', '$0.00', '¥ 0.00', '$ 0.00']
 
 
 async def steam_games_raw() -> str:
@@ -24,8 +26,13 @@ def steam_games_raw_list(html: str) -> list[str]:
 
 def steam_game_info(html: str) -> dict:
     soup = BeautifulSoup(html, 'html.parser')
-    game_appid = soup.find('a')[GAME_APPID_A_FIELD]
-    game_link = 'https://store.steampowered.com/app/' + game_appid
+    a_field = soup.find('a')
+    if GAME_PAKID_A_FIELD in a_field.attrs:
+        game_appid = a_field[GAME_PAKID_A_FIELD]
+    else:
+        game_appid = a_field[GAME_APPID_A_FIELD]
+    # game_link = 'https://store.steampowered.com/app/' + game_appid
+    game_link = a_field['href']
     game_name = soup.find('span', class_='title').text
     game_price = soup.find('div', class_=GAME_PRICE_DIV_CLASS).text
     game_info = {
@@ -52,6 +59,10 @@ def steam_free_games_dict(games_dict: dict[int, dict]) -> dict[int, dict]:
     for game_id, game_info in games_dict.items():
         if not same_price_games_ids:
             same_price_games_ids.append(game_id)
+            continue
+
+        if any(price in game_info['price'] for price in FREE_PRICES):
+            free_games_ids.append(game_id)
             continue
 
         if game_info['price'] == games_dict[same_price_games_ids[0]]['price']:
