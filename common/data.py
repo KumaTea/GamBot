@@ -28,6 +28,9 @@ FALL_ICON = '🔽'
 STOCK_DATA_DIR = 'data/stock'
 STOCK_REMINDER_FILE = 'reminder.p'
 
+SH_URL = 'https://finance.sina.com.cn/realstock/company/sh000001/nc.shtml'
+SZ_URL = 'https://finance.sina.com.cn/realstock/company/sz399001/nc.shtml'
+CYB_URL = 'https://finance.sina.com.cn/realstock/company/sz399006/nc.shtml'
 
 # gacha
 

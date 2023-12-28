@@ -1,6 +1,7 @@
 import asyncio
 from io import BytesIO
 from typing import Tuple, Optional
+from common.data import SZ_URL, CYB_URL
 from stock.req import get_raw_price, get_raw_updown, get_price_img
 from stock.tools import StockData, StockReminder, is_trading_time, invest_suggestion
 from stock.format import get_stock_details, get_detailed_summary, get_stock_short_summary, get_updown_bar, get_updown
@@ -34,8 +35,8 @@ async def get_stock_summary(trading: bool = None) -> str:
     stock_summary = (
         f'{trading_info}\n'
         f'{sh_sum}\n'
-        f'深 {sz_sum}\n'
-        f'创 {cyb_sum}\n'
+        f'[深]({SZ_URL}) {sz_sum}\n'
+        f'[创]({CYB_URL}) {cyb_sum}\n'
         f'{suggestion}'
     )
     return stock_summary
