@@ -20,7 +20,7 @@ def epic_free_games_list(games_json: dict) -> list[dict]:
     free_games = []
     games = games_json['data']['Catalog']['searchStore']['elements']
     for game in games:
-        if '-' in game['productSlug']:
+        if 'productSlug' in game and game['productSlug'] and '-' in game['productSlug']:
             free_games.append(game)
     return free_games
 
