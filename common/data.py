@@ -11,7 +11,8 @@ SINA_HEADER = {
 
 STOCK_PRICE_API = 'https://hq.sinajs.cn/list={STOCK_CODE}'
 
-STOCK_PRICE_IMG = 'https://image.sinajs.cn/newchart/min/n/{STOCK_CODE}.gif'
+# STOCK_PRICE_IMG = 'https://image.sinajs.cn/newchart/min/n/{STOCK_CODE}.gif'
+STOCK_PRICE_IMG = 'https://image.sinajs.cn/n/cn/min/640x360xxfhd/{STOCK_CODE}.png'
 # daily: https://image.sinajs.cn/newchart/daily/n/sh000001.gif
 # weekly: https://image.sinajs.cn/newchart/weekly/n/sh000001.gif
 # monthly: https://image.sinajs.cn/newchart/monthly/n/sh000001.gif
