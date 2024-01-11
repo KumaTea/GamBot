@@ -1,6 +1,6 @@
 import aiohttp
-from PIL import Image
 from io import BytesIO
+# from bot.convert import to_jpg
 from common.data import STOCK_PRICE_API, UPDOWN_API, STOCK_PRICE_IMG, SINA_HEADER
 
 
@@ -25,11 +25,5 @@ async def get_price_img(stock_code: str) -> BytesIO:
     async with aiohttp.ClientSession() as session:
         async with session.get(STOCK_PRICE_IMG.format(STOCK_CODE=stock_code), headers=SINA_HEADER) as resp:
             img_bytes = await resp.read()
-    gif_image = Image.open(BytesIO(img_bytes))
-    # gif_image.seek(0)
-    jpg_image = gif_image.convert('RGB')
-    jpg_bytes = BytesIO()
-    jpg_bytes.name = 'price.jpg'
-    jpg_image.save(jpg_bytes, format='JPEG')
-    # jpg_bytes.seek(0)
-    return jpg_bytes
+    # return to_jpg(BytesIO(img_bytes))
+    return BytesIO(img_bytes)
