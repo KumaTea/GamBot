@@ -46,7 +46,7 @@ async def send_and_cache(
             img = await client.send_photo(chat_id, photo=price_img)
             price_img_id = img.photo.file_id
             stock_cache.save(stock_summary, updown_bar, price_img_id)
-            return await client.send_message(chat_id, text)
+            return await client.send_message(chat_id, text, disable_web_page_preview=True)
         else:
             await client.send_photo(chat_id, photo=price_img_id)
-            return await client.send_message(chat_id, text)
+            return await client.send_message(chat_id, text, disable_web_page_preview=True)

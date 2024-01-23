@@ -1,17 +1,17 @@
 from pyrogram import Client
-from bot.auth import ensure_not_bl
+from bot.auth import ensure_auth
 from pyrogram.types import Message
 from stock.main import stock_reminder
 from func.stock.tools import query_stock, send_and_cache
 
 
-@ensure_not_bl
+@ensure_auth
 async def command_stock(client: Client, message: Message) -> Message:
     stock_summary, updown_bar, price_img, price_img_id = await query_stock()
     return await send_and_cache(stock_summary, updown_bar, price_img, price_img_id, message=message)
 
 
-@ensure_not_bl
+@ensure_auth
 async def command_remind_stock(client: Client, message: Message) -> Message:
     chat_id = message.chat.id
     user = message.from_user
@@ -24,7 +24,7 @@ async def command_remind_stock(client: Client, message: Message) -> Message:
     return await message.reply_text(text, quote=False)
 
 
-@ensure_not_bl
+@ensure_auth
 async def command_forget_stock(client: Client, message: Message) -> Message:
     chat_id = message.chat.id
     user = message.from_user

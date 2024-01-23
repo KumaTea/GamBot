@@ -1,7 +1,19 @@
+import os
+
+
+if os.name == 'nt':
+    pwd = r'D:\GitHub\GamBot'
+else:
+    pwd = '/home/kuma/bots/jd'
+
 # common
 
 PHOTO_COMMIT_MSG = 'commit user photo'
 
+url_regex = r'https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|' \
+            r'www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|' \
+            r'https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|' \
+            r'www\.[a-zA-Z0-9]+\.[^\s]{2,}'
 
 # stock
 

@@ -1,6 +1,6 @@
 import asyncio
 from pyrogram import Client
-from bot.auth import ensure_not_bl
+from bot.auth import ensure_auth
 from pyrogram.types import Message
 from func.free.steam import STEAM_FREE_URL
 from func.free.epic import get_epic_free_games_json, epic_free_games_list, epic_game_info
@@ -44,7 +44,7 @@ async def epic_free_games() -> str:
     return text
 
 
-@ensure_not_bl
+@ensure_auth
 async def command_free(client: Client, message: Message) -> Message:
     inform, steam, epic = await asyncio.gather(
         message.reply_text('正在获取...', quote=False),

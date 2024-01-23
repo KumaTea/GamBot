@@ -1,7 +1,7 @@
 import random
 import asyncio
 from pyrogram import Client
-from bot.auth import ensure_not_bl
+from bot.auth import ensure_auth
 from pyrogram.types import Message
 from common.info import administrators
 from bot.tools import get_command_content
@@ -18,7 +18,7 @@ pools = {
 }
 
 
-@ensure_not_bl
+@ensure_auth
 async def command_gacha(client: Client, message: Message) -> Message:
     content = get_command_content(message)
     if not content:
@@ -40,22 +40,22 @@ async def command_gacha(client: Client, message: Message) -> Message:
     return await message.reply_text('找不到指定的池子！', quote=False)
 
 
-@ensure_not_bl
+@ensure_auth
 async def command_gacha_genshin(client: Client, message: Message) -> Message:
     return await gacha_genshin(client, message)
 
 
-@ensure_not_bl
+@ensure_auth
 async def command_gacha_arknights(client: Client, message: Message) -> Message:
     return await gacha_arknights(client, message)
 
 
-@ensure_not_bl
+@ensure_auth
 async def command_gacha_groupmem(client: Client, message: Message) -> Message:
     return await gacha_group_member(client, message)
 
 
-# no need to ensure_not_bl
+# no need to ensure_auth
 async def force_refresh(client: Client, message: Message):
     chat_id = message.chat.id
     user_id = message.from_user.id

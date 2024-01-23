@@ -6,7 +6,7 @@ from gacha.groupmem.store import user_photos
 from msg.photo import reply_photo_id, save_user_photo
 
 
-# @ensure_not_bl
+# @ensure_auth
 async def private_message(client: Client, message: Message) -> Message:
     if message.from_user and message.from_user.id in administrators and message.photo:
         if message.caption and message.caption.isdigit():
