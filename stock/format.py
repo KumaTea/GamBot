@@ -30,7 +30,7 @@ def get_detailed_summary(stock_details: dict, trading: bool = None) -> str:
     if trading:
         message += '当前 {PRICE_INFO}\n'
     else:
-        message += '收盘时 {PRICE_INFO}\n'
+        message += '收盘 {PRICE_INFO}\n'
     message += '{HISTORY_INFO}\n{PEAK_INFO}\n'
     fluctuation = RISE_ICON if stock_details['涨跌'] > 0 else FALL_ICON
     price_info = '**{当前:.2f}**\n{FL} {涨跌:.2f} {涨跌幅:.2%}'.format(
