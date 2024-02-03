@@ -8,8 +8,7 @@ RUN set -ex && \
     conda create -n jd aiohttp apscheduler beautifulsoup4 pillow pyrogram uvloop -y && \
     conda clean -afy && \
     conda activate jd && \
-    pip install telethon && \
-    pip install tgcrypto 2>/dev/null || wget "https://github.com/KumaTea/NextBot/releases/download/1.0/TgCrypto-1.2.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl" && pip install ./TgCrypto-1.2.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl && rm ./TgCrypto-1.2.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl && \
+    pip install telethon chinesecalendar tgcrypto --extra-index-url https://ext.kmtea.eu/simple && \
     rm -rf /root/.cache/*
 
 

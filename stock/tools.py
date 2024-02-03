@@ -5,11 +5,13 @@ from pyrogram.types import User
 from time import time as timestamp
 from datetime import datetime, time
 from common.data import STOCK_DATA_DIR, STOCK_REMINDER_FILE
+from chinese_calendar import is_holiday
 
 
 def is_trading_day() -> bool:
     now = datetime.now()
-    if now.weekday() >= 5:
+    is_weekend = now.weekday() >= 5
+    if is_weekend or is_holiday(now):
         return False
     return True
 
