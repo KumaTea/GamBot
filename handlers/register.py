@@ -24,6 +24,9 @@ def register_handlers():
     bot.add_handler(MessageHandler(command_free, filters.command(['free', 'free_games']) & filters.group))
     bot.add_handler(MessageHandler(command_baccarat, filters.command(['baccarat', 'bjl']) & filters.group))
 
+    # stickers
+    bot.add_handler(MessageHandler(command_bro, filters.command(['bro']) & filters.group))
+
     # admin commands
     bot.add_handler(MessageHandler(force_refresh, filters.command(['refresh']) & filters.group))
 

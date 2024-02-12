@@ -65,3 +65,8 @@ GACHA_GROUPMEM_CMD = ['groupmem', '群老婆', 'qlp', 'lp', 'group']
 # games
 
 BACCARAT_RULE = 'https://zh.wikipedia.org/wiki/%E7%99%BE%E5%AE%B6%E6%A8%82#%E8%A3%9C%E7%89%8C%E8%A6%8F%E5%89%87'
+
+# stickers
+
+BRO_EMPTY = 'CAACAgUAAx0ESGhsZQACCRtl0PkJvFKwi9_y7hFc1fRUyRkZGwAClwwAAvuviVYYqNOATmN-nh4E'
+BRO_TOO_LONG = 'CAACAgUAAx0ESGhsZQACCR1l0PkzUuWbdIzce1ZLe8SfBO6hFQACmAwAAvuviVb9wkBndh3lcR4E'

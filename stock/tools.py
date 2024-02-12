@@ -4,8 +4,8 @@ from typing import Dict, List
 from pyrogram.types import User
 from time import time as timestamp
 from datetime import datetime, time
-from common.data import STOCK_DATA_DIR, STOCK_REMINDER_FILE
 from chinese_calendar import is_holiday
+from common.data import STOCK_DATA_DIR, STOCK_REMINDER_FILE
 
 
 def is_trading_day() -> bool:
