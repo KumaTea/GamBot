@@ -70,3 +70,10 @@ BACCARAT_RULE = 'https://zh.wikipedia.org/wiki/%E7%99%BE%E5%AE%B6%E6%A8%82#%E8%A
 
 BRO_EMPTY = 'CAACAgUAAx0ESGhsZQACCRtl0PkJvFKwi9_y7hFc1fRUyRkZGwAClwwAAvuviVYYqNOATmN-nh4E'
 BRO_TOO_LONG = 'CAACAgUAAx0ESGhsZQACCR1l0PkzUuWbdIzce1ZLe8SfBO6hFQACmAwAAvuviVb9wkBndh3lcR4E'
+
+USER_AGENT = (
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+    'AppleWebKit/537.36 (KHTML, like Gecko) '
+    'Chrome/122.0.0.0 '
+    'Safari/537.36'
+)

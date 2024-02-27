@@ -3,12 +3,12 @@ from pyrogram import Client
 from bot.auth import ensure_auth
 from pyrogram.types import Message
 from func.free.steam import STEAM_FREE_URL
-from func.free.epic import get_epic_free_games_json, epic_free_games_list, epic_game_info
+from func.free.epic import get_epic_free_games_json, epic_free_games_list, epic_game_info, EPIC_FREE_URL
 from func.free.steam import steam_games_raw, steam_games_raw_list, steam_games_dict, steam_free_games_dict
 
 
 async def steam_free_games() -> str:
-    text = f'[Steam 免费]({STEAM_FREE_URL}) (疑似): \n'
+    text = f'[Steam 免费]({STEAM_FREE_URL}): \n'
     try:
         games_raw = await steam_games_raw()
         games_raw_list = steam_games_raw_list(games_raw)
@@ -27,7 +27,7 @@ async def steam_free_games() -> str:
 
 
 async def epic_free_games() -> str:
-    text = f'[Epic Games 免费](https://store.epicgames.com/en-US/free-games):\n'
+    text = f'[Epic Games 免费]({EPIC_FREE_URL}): \n'
     try:
         free_games_json = await get_epic_free_games_json()
         free_games_list = epic_free_games_list(free_games_json)

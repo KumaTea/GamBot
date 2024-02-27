@@ -1,8 +1,10 @@
 import os
 import re
+import logging
 from typing import Union
-from urllib.request import urlopen
-from common.data import url_regex, pwd
+from urllib.error import HTTPError
+from urllib.request import urlopen, Request
+from common.data import url_regex, pwd, USER_AGENT
 
 
 def trimmer(data: Union[dict, list]):
@@ -49,7 +51,7 @@ def find_url(text: str):
 
 # run this before commit
 # for aesthetic purpose
-def sort_imports(path: pwd):
+def sort_imports(path: str = pwd):
     # python_files = [i for i in os.listdir() if i.endswith('.py')]
     for root, dirs, files in os.walk(path):
         for file in files:
@@ -84,8 +86,13 @@ def sort_import(file):
 
 
 def get_url_text(url: str) -> str:
-    with urlopen(url) as response:
-        return response.read().decode('utf-8')
+    try:
+        req = Request(url, headers={'User-Agent': USER_AGENT})
+        with urlopen(req) as response:
+            return response.read().decode('utf-8')
+    except HTTPError:
+        logging.warning(f'Failed to get text from {url}')
+        return ''
 
 
 def process_text(text: str) -> str:

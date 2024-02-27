@@ -10,6 +10,7 @@ EPIC_FREE_API = (
     # 'country=US&'
     # 'allowCountries=US'
 )
+EPIC_FREE_URL = 'https://store.epicgames.com/en-US/free-games'
 
 
 async def get_epic_free_games_json() -> dict:
@@ -44,7 +45,10 @@ def epic_free_games_list(games_json: dict) -> list[dict]:
         if get_game_link(game):
             valid_games.append(game)
     for game in valid_games:
-        offers = game['promotions']['promotionalOffers']
+        promotions = game['promotions']
+        if not promotions:
+            continue
+        offers = promotions['promotionalOffers']
         if not offers:
             continue
         while 'promotionalOffers' in offers[0]:
