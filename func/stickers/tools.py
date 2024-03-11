@@ -1,5 +1,5 @@
-from uuid import uuid4
 from PIL import Image
+from uuid import uuid4
 from io import BytesIO
 
 

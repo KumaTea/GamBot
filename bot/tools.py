@@ -1,7 +1,7 @@
 import re
 from typing import Optional
 from pyrogram import Client
-from pyrogram.types import Message, User
+from pyrogram.types import User, Message
 
 
 cmd_pattern = re.compile(r'^/\w+@?\w+[\s\n]')

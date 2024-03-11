@@ -38,5 +38,6 @@ def register_handlers():
 
 def add_jobs():
     scheduler.add_job(remind_stock_all, 'cron', hour=14, minute=55)
+    scheduler.add_job(remind_free, 'cron', hour=0, minute=5)
     scheduler.start()
     return logging.info('apscheduler started')

@@ -3,8 +3,8 @@ from pyrogram import Client
 from bot.auth import ensure_auth
 from pyrogram.types import Message
 from func.free.steam import STEAM_FREE_URL
-from func.free.epic import get_epic_free_games_json, epic_free_games_list, epic_game_info, EPIC_FREE_URL
-from func.free.steam import steam_games_raw, steam_games_raw_list, steam_games_dict, steam_free_games_dict
+from func.free.epic import EPIC_FREE_URL, epic_game_info, epic_free_games_list, get_epic_free_games_json
+from func.free.steam import steam_games_raw, steam_games_dict, steam_games_raw_list, steam_free_games_dict
 
 
 async def steam_free_games() -> str:

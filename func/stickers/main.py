@@ -1,9 +1,9 @@
 import math
-from common.data import BRO_EMPTY, BRO_TOO_LONG
 from pyrogram import Client
 from bot.auth import ensure_auth
 from pyrogram.types import Message
 from func.stickers.tools import to_webp
+from common.data import BRO_EMPTY, BRO_TOO_LONG
 from func.stickers.bro import draw_text as draw_bro
 
 

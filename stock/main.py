@@ -2,9 +2,9 @@ import asyncio
 from io import BytesIO
 from typing import Tuple, Optional
 from common.data import SZ_URL, CYB_URL
-from stock.req import get_raw_price, get_raw_updown, get_price_img
+from stock.req import get_price_img, get_raw_price, get_raw_updown
 from stock.tools import StockData, StockReminder, is_trading_time, invest_suggestion
-from stock.format import get_stock_details, get_detailed_summary, get_stock_short_summary, get_updown_bar, get_updown
+from stock.format import get_updown, get_updown_bar, get_stock_details, get_detailed_summary, get_stock_short_summary
 
 
 stock_cache = StockData()

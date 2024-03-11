@@ -3,7 +3,7 @@ from pyrogram import Client
 from pyrogram.types import Message
 from common.data import LOADING_ARKNIGHTS
 from func.gacha.tools import result_sender
-from gacha.arknights.main import ark_data, gacha
+from gacha.arknights.main import gacha, ark_data
 
 
 async def gacha_arknights(client: Client, message: Message) -> Message:

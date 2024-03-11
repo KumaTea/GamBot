@@ -1,6 +1,6 @@
 import asyncio
 from propic.query import send_chat_member_photos
-from propic.session import arg_parser, StatHolder, me
+from propic.session import me, StatHolder, arg_parser
 
 
 holder = StatHolder('propic/run.lock')

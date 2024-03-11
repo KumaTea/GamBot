@@ -14,12 +14,17 @@ def get_textbox_size(text: str, font: ImageFont) -> tuple:
     return x1 - x0, y1 - y0
 
 
-def get_max_font_size(text: str, font_path: str = FONT_PATH) -> int:
+def get_max_font_size(
+        text: str,
+        font_path: str = FONT_PATH,
+        side_length: int = SIDE_LENGTH,
+        spacing: int = SPACING
+) -> int:
     font_size = 1
     font = ImageFont.truetype(font_path, font_size)
     text_width, text_height = get_textbox_size(text, font)
 
-    while text_width < SIDE_LENGTH - SPACING:
+    while (text_width < (side_length - 2 * spacing)) and (text_height < (side_length - 2 * spacing)):
         font_size += 1
         font = ImageFont.truetype(font_path, font_size)
         text_width, text_height = get_textbox_size(text, font)

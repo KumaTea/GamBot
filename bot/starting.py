@@ -1,7 +1,7 @@
 import os
 import logging
-from common.data import USER_PHOTO_DIR, STOCK_DATA_DIR
-from handlers.register import register_handlers, add_jobs
+from common.data import STOCK_DATA_DIR, USER_PHOTO_DIR
+from handlers.register import add_jobs, register_handlers
 
 
 def mkdir_p(paths: list):

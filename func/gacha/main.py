@@ -7,8 +7,8 @@ from common.info import administrators
 from bot.tools import get_command_content
 from func.gacha.genshin import gacha_genshin
 from func.gacha.arknights import gacha_arknights
-from func.gacha.groupmem import gacha_group_member, run_pic_bot
-from common.data import GACHA_GENSHIN_CMD, GACHA_ARKNIGHTS_CMD, GACHA_GROUPMEM_CMD
+from func.gacha.groupmem import run_pic_bot, gacha_group_member
+from common.data import GACHA_GENSHIN_CMD, GACHA_GROUPMEM_CMD, GACHA_ARKNIGHTS_CMD
 
 
 pools = {

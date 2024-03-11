@@ -1,7 +1,7 @@
 from time import time
 from io import BytesIO
 from pyrogram import Client
-from typing import Optional, Tuple
+from typing import Tuple, Optional
 from pyrogram.types import Message
 from stock.tools import is_trading_time
 from stock.main import query, stock_cache

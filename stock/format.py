@@ -1,5 +1,5 @@
 from stock.tools import is_trading_time
-from common.data import RISE_ICON, FALL_ICON, UP_ICON, DOWN_ICON, STILL_ICON, SH_URL
+from common.data import SH_URL, UP_ICON, DOWN_ICON, FALL_ICON, RISE_ICON, STILL_ICON
 
 
 def get_stock_details(raw_price: str) -> dict:

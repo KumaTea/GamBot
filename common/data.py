@@ -77,3 +77,5 @@ USER_AGENT = (
     'Chrome/122.0.0.0 '
     'Safari/537.36'
 )
+
+TEASPS_ID = -1001932978232
