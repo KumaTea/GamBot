@@ -50,17 +50,17 @@ CYB_URL = 'https://quote.eastmoney.com/zs399006.html'
 LOADING_DEFAULT = 'AgACAgUAAxkBAAMGZW8yOiTRz6gW2CvtXOn4eTqqit8AAi68MRvj_XlXULp0igotjbgACAEAAwIAA3gABx4E'
 
 # # genshin
-GACHA_GENSHIN_CMD = ['genshin', 'yuanshen', '原神', 'gs', 'ys', 'gi']
+GACHA_GENSHIN_CMD = {'genshin', 'yuanshen', '原神', 'gs', 'ys', 'gi'}
 LOADING_GENSHIN = 'AgACAgUAAxkBAAMIZW8yh3HdhNmpzgnc8nczPGZeeq8AApe7MRtbkHhXEJyXoUvTpHoACAEAAwIAA3kABx4E'
 
 # # arknights
-GACHA_ARKNIGHTS_CMD = ['arknights', '方舟', '明日方舟', 'ark', 'mrfz', 'fz']
+GACHA_ARKNIGHTS_CMD = {'arknights', '方舟', '明日方舟', 'ark', 'mrfz', 'fz'}
 LOADING_ARKNIGHTS = 'AgACAgUAAxkBAAMKZW8yztd5Nux3qoyXotgaTjFapkgAApm7MRtbkHhXIHKInNaQDMoACAEAAwIAA3kABx4E'
 
 # # groupmem
 USER_PHOTO_DIR = 'data/groupmem'
 USER_PHOTO_FILE = 'photo.p'
-GACHA_GROUPMEM_CMD = ['groupmem', '群老婆', 'qlp', 'lp', 'group']
+GACHA_GROUPMEM_CMD = {'groupmem', '群老婆', 'qlp', 'lp', 'group'}
 
 # games
 

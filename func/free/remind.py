@@ -2,7 +2,7 @@ import asyncio
 from bot.session import bot
 from common.data import TEASPS_ID
 from pyrogram.types import Message
-from func.free.main import steam_free_games, epic_free_games
+from func.free.main import epic_free_games, steam_free_games
 
 
 async def remind_free() -> Message:

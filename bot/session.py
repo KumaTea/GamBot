@@ -5,7 +5,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 
 logging.basicConfig(
-    format='%(asctime)s %(levelname)-8s %(filename)15s:%(lineno)3s %(funcName)20s> %(message)s',
+    format='%(asctime)s %(levelname)-8s %(module)12.12s:%(lineno)3d %(funcName)12.12s> %(message)s',
     level=logging.INFO,
     datefmt='%m-%d %H:%M:%S')
 
