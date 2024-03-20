@@ -1,7 +1,7 @@
 import random
 import asyncio
 from pyrogram import Client
-from bot.auth import ensure_auth
+from share.auth import ensure_auth
 from pyrogram.types import Message
 from common.info import administrators
 from bot.tools import get_command_content

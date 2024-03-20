@@ -34,10 +34,13 @@ def steam_game_info(html: str) -> Optional[dict]:
         logging.warning('No <a> found in html!')
         logging.debug(html)
         return None
-    if GAME_APPID_A_FIELD in a_field.attrs:
-        game_appid = a_field[GAME_APPID_A_FIELD]
-    elif GAME_PAKID_A_FIELD in a_field.attrs:
+    if GAME_PAKID_A_FIELD in a_field.attrs:
+        # should be first
+        # as data-ds-appid could be multiple numbers
+        # seperated by comma
         game_appid = a_field[GAME_PAKID_A_FIELD]
+    elif GAME_APPID_A_FIELD in a_field.attrs:
+        game_appid = a_field[GAME_APPID_A_FIELD]
     elif GAME_BUNID_A_FIELD in a_field.attrs:
         game_appid = a_field[GAME_BUNID_A_FIELD]
     else:

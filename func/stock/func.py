@@ -1,5 +1,5 @@
 from pyrogram import Client
-from bot.auth import ensure_auth
+from share.auth import ensure_auth
 from pyrogram.types import Message
 from stock.main import stock_reminder
 from func.stock.tools import query_stock, send_and_cache

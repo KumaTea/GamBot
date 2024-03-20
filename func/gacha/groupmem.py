@@ -6,7 +6,7 @@ from bot.tools import get_user_name
 from gacha.groupmem.store import user_photos
 from pyrogram.types import Message, ChatMember
 from gacha.groupmem.main import gacha, grp_data
-from common.local import bl_users, trusted_group
+from share.local import bl_users, trusted_group
 from bot.raw import send_photo, get_user_profile_photo
 
 

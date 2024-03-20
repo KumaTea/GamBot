@@ -1,5 +1,5 @@
 from pyrogram import Client
-from bot.auth import ensure_auth
+from share.auth import ensure_auth
 from pyrogram.types import Message
 from func.games.baccarat import start_baccarat
 

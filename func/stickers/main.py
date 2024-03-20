@@ -1,6 +1,6 @@
 import math
 from pyrogram import Client
-from bot.auth import ensure_auth
+from share.auth import ensure_auth
 from pyrogram.types import Message
 from func.stickers.tools import to_webp
 from common.data import BRO_EMPTY, BRO_TOO_LONG

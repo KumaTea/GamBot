@@ -2,7 +2,7 @@ from typing import List
 from propic.session import me
 from bot.session import logging
 from common.info import self_id
-from common.local import bl_users
+from share.local import bl_users
 from telethon.tl.types import User
 from common.data import PHOTO_COMMIT_MSG
 
