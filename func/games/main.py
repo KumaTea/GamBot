@@ -2,6 +2,7 @@ from pyrogram import Client
 from share.auth import ensure_auth
 from pyrogram.types import Message
 from func.games.baccarat import start_baccarat
+from func.games.balance_cmd import command_balance
 
 
 @ensure_auth

@@ -2,7 +2,7 @@
 # conda
 pillow
 aiohttp
-pyrogram
+kurigram
 apscheduler
 
 # pip

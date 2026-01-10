@@ -1,4 +1,5 @@
 import logging
+import pyrogram
 import configparser
 from pyrogram import Client
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -19,3 +20,6 @@ bot = Client(
 )
 
 scheduler = AsyncIOScheduler()
+
+pyrogram_version = tuple(map(int, pyrogram.__version__.split('.')))
+is_old_pyrogram = pyrogram_version <= (2, 0, 106)

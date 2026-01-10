@@ -2,8 +2,9 @@ import logging
 from pyrogram import filters
 from handlers.functions import *
 from bot.session import bot, scheduler
-from pyrogram.handlers import MessageHandler
 from handlers.messages import private_message
+from func.games.callbacks import handle_baccarat_callback
+from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 
 
 def register_handlers():
@@ -23,6 +24,8 @@ def register_handlers():
     # games
     bot.add_handler(MessageHandler(command_free, filters.command(['free', 'free_games']) & filters.group))
     bot.add_handler(MessageHandler(command_baccarat, filters.command(['baccarat', 'bjl']) & filters.group))
+    bot.add_handler(MessageHandler(command_balance, filters.command(['balance', '余额', 'money']) & filters.group))
+    bot.add_handler(CallbackQueryHandler(handle_baccarat_callback, filters.regex(r'^(bet|amount|confirm)_')))
 
     # stickers
     bot.add_handler(MessageHandler(command_bro, filters.command(['bro']) & filters.group))

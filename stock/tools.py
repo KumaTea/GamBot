@@ -8,18 +8,19 @@ from chinese_calendar import is_holiday
 from common.data import STOCK_DATA_DIR, STOCK_REMINDER_FILE
 
 
-def is_trading_day() -> bool:
-    now = datetime.now()
-    is_weekend = now.weekday() >= 5
-    if is_weekend or is_holiday(now):
+def is_trading_day(date: datetime = None) -> bool:
+    date = date or datetime.now()
+    is_weekend = date.weekday() >= 5
+    if is_weekend or is_holiday(date):
         return False
     return True
 
 
-def is_trading_time() -> bool:
-    if not is_trading_day():
+def is_trading_time(query_time: datetime = None) -> bool:
+    query_time = query_time or datetime.now()
+    if not is_trading_day(query_time):
         return False
-    now = datetime.now().time()
+    now = query_time.time()
     morning_start = time(9, 30)
     morning_end = time(11, 30)
     afternoon_start = time(13, 0)

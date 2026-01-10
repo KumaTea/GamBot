@@ -2,6 +2,8 @@ import asyncio
 from bot.session import bot
 from common.data import TEASPS_ID
 from pyrogram.types import Message
+from stock.tools import is_trading_day
+from datetime import datetime, timedelta
 from func.free.main import epic_free_games, steam_free_games
 
 
@@ -14,5 +16,10 @@ async def remind_free() -> Message:
     )
     text += '\n\n'
     text += f'{steam}\n\n{epic}\n\n'
-    text += '另外，可以做每日签到了'
+
+    tasks = ['每日签到']
+    yesterday = datetime.now() - timedelta(hours=12)
+    if is_trading_day(yesterday):
+        tasks.append('查看盈亏')
+    text += '另外，可以' + '、'.join(tasks) + '了'
     return await inform.edit_text(text, disable_web_page_preview=True)

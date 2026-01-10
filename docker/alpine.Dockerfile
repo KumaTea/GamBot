@@ -1,6 +1,6 @@
 FROM kumatea/pyrogram:alpine
 
-ENV PIP_PKGS="aiohttp apscheduler beautifulsoup4 pillow telethon chinesecalendar tgcrypto"
+ENV PIP_PKGS="aiohttp apscheduler<3.11 beautifulsoup4 chinesecalendar pillow requests telethon"
 
 # Install packages
 RUN set -ex && \
