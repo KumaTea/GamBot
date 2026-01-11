@@ -33,6 +33,14 @@ class BettingState:
             }
         return True
 
+    def undo_bet(self, chat_id: int, user_id: int) -> int:
+        """Undo a user's bet. Returns the amount refunded, or 0 if no bet"""
+        if chat_id in self.active_bets and user_id in self.active_bets[chat_id]:
+            amount = self.active_bets[chat_id][user_id]['amount']
+            del self.active_bets[chat_id][user_id]
+            return amount
+        return 0
+
     def get_bets(self, chat_id: int) -> Dict[int, Dict[str, any]]:
         """Get all bets for a chat"""
         return self.active_bets.get(chat_id, {})

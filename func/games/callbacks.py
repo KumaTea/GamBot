@@ -29,9 +29,8 @@ async def handle_baccarat_callback(client: Client, callback: CallbackQuery) -> O
     
     # Check if betting is still open
     if not betting_state.is_betting_open(chat_id):
-        await callback.answer('下注时间已结束！', show_alert=True)
-        return None
-    
+        return await callback.answer('下注时间已结束！', show_alert=True)
+
     # Handle bet type selection
     if action == 'bet' and len(data_parts) == 3:
         bet_type = data_parts[2]  # 'player', 'banker', or 'tie'
@@ -41,9 +40,8 @@ async def handle_baccarat_callback(client: Client, callback: CallbackQuery) -> O
         temp_bets[user_id]['bet_type'] = bet_type
         
         bet_type_name = {'player': '闲家', 'banker': '庄家', 'tie': '和局'}[bet_type]
-        await callback.answer(f'已选择：{bet_type_name}', show_alert=False)
-        return None
-    
+        return await callback.answer(f'已选择：{bet_type_name}', show_alert=False)
+
     # Handle amount selection
     elif action == 'amount' and len(data_parts) == 3:
         amount_str = data_parts[2]
@@ -59,7 +57,7 @@ async def handle_baccarat_callback(client: Client, callback: CallbackQuery) -> O
         if amount_str == 'all':
             # Set to all available balance
             temp_bets[user_id]['amount'] = current_balance
-            await callback.answer(f'已选择全部余额：{current_balance}', show_alert=False)
+            return await callback.answer(f'已选择全部余额：{current_balance}', show_alert=False)
         else:
             # Accumulate amount
             add_amount = int(amount_str)
@@ -68,40 +66,44 @@ async def handle_baccarat_callback(client: Client, callback: CallbackQuery) -> O
             # Don't exceed balance
             if new_amount > current_balance:
                 temp_bets[user_id]['amount'] = current_balance
-                await callback.answer(f'已达到最大余额：{current_balance}', show_alert=False)
+                return await callback.answer(f'已达到最大余额：{current_balance}', show_alert=False)
             else:
                 temp_bets[user_id]['amount'] = new_amount
-                await callback.answer(f'已选择金额：{new_amount} (+{add_amount})', show_alert=False)
-        
-        return None
-    
+                return await callback.answer(f'已选择金额：{new_amount} (+{add_amount})', show_alert=False)
+
     # Handle bet cancellation
     elif action == 'cancel':
+        # not complete
         if user_id in temp_bets:
             del temp_bets[user_id]
-        await callback.answer('已取消下注', show_alert=False)
-        return None
+            return await callback.answer('已取消下注', show_alert=False)
+
+        # complete
+        refund = betting_state.undo_bet(chat_id, user_id)
+        if refund > 0:
+            user_balance.add_balance(user_id, refund)
+            return await callback.answer(f'已取消下注，返还金额：{refund}', show_alert=False)
+
+        return await callback.answer('未下注！', show_alert=False)
     
     # Handle bet confirmation
     elif action == 'confirm':
         if user_id not in temp_bets:
-            await callback.answer('请先选择下注类型和金额！', show_alert=True)
-            return None
-        
+            return await callback.answer('请先选择下注类型和金额！', show_alert=True)
+
         bet_info = temp_bets[user_id]
         if 'bet_type' not in bet_info or 'amount' not in bet_info or bet_info.get('amount', 0) <= 0:
             await callback.answer('请先选择下注类型和金额！', show_alert=True)
             return None
-        
+
         bet_type = bet_info['bet_type']
         amount = bet_info['amount']
         
         # Check balance
         current_balance = user_balance.get_balance(user_id)
         if current_balance < amount:
-            await callback.answer(f'余额不足！当前余额：{current_balance}', show_alert=True)
-            return None
-        
+            return await callback.answer(f'余额不足！当前余额：{current_balance}', show_alert=True)
+
         # Place bet
         success = betting_state.place_bet(chat_id, user_id, bet_type, amount)
         if success:
@@ -147,15 +149,11 @@ async def handle_baccarat_callback(client: Client, callback: CallbackQuery) -> O
                     updated_text = '\n'.join(updated_lines)
                     await message.edit_text(
                         updated_text,
-                        **no_preview,
-                        reply_markup=message.reply_markup
+                        reply_markup=message.reply_markup,
+                        **no_preview
                     )
             except Exception:
                 # If update fails, just continue
                 pass
         else:
-            await callback.answer('下注失败，请重试！', show_alert=True)
-        
-        return None
-    
-    return None
+            return await callback.answer('下注失败，请重试！', show_alert=True)

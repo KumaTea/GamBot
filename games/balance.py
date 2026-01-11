@@ -5,7 +5,9 @@ from typing import Dict
 
 BALANCE_DATA_DIR = 'data/games'
 BALANCE_DATA_FILE = 'balance.p'
-STARTING_BALANCE = 1000  # Initial money for new users
+STARTING_BALANCE = 10000  # Initial money for new users
+MINIMUM_BALANCE = 10  # 救济金起点
+WELFARE_AMOUNT = 1000  # 救济金金额
 
 
 def ensure_data_dir():
@@ -14,32 +16,37 @@ def ensure_data_dir():
         os.makedirs(BALANCE_DATA_DIR, exist_ok=True)
 
 
+def fmt_balance(amount: int | float) -> float:
+    """Format balance to 2 decimal places"""
+    return round(amount, 2)
+
+
 class UserBalance:
     def __init__(self):
-        self.balances: Dict[int, int] = {}  # user_id -> balance
+        self.balances: Dict[int, float] = {}  # user_id -> balance
         ensure_data_dir()
         self.load()
 
-    def get_balance(self, user_id: int) -> int:
+    def get_balance(self, user_id: int) -> float:
         """Get user's balance, initialize if new user"""
         if user_id not in self.balances:
-            self.balances[user_id] = STARTING_BALANCE
+            self.balances[user_id] = fmt_balance(STARTING_BALANCE)
             self.save()
         return self.balances[user_id]
 
-    def set_balance(self, user_id: int, amount: int):
+    def set_balance(self, user_id: int, amount: int | float):
         """Set user's balance"""
         self.balances[user_id] = amount
         self.save()
 
-    def add_balance(self, user_id: int, amount: int) -> int:
+    def add_balance(self, user_id: int, amount: int | float) -> float:
         """Add to user's balance and return new balance"""
         current = self.get_balance(user_id)
         new_balance = current + amount
         self.set_balance(user_id, new_balance)
         return new_balance
 
-    def subtract_balance(self, user_id: int, amount: int) -> bool:
+    def subtract_balance(self, user_id: int, amount: int | float) -> bool:
         """Subtract from user's balance. Returns True if successful, False if insufficient funds"""
         current = self.get_balance(user_id)
         if current < amount:

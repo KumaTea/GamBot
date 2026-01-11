@@ -1,8 +1,9 @@
+import logging
 from pyrogram import Client
 from pyrogram.types import Message
 from share.auth import ensure_auth
 from bot.tools import get_user_name
-from games.balance import user_balance
+from games.balance import user_balance, MINIMUM_BALANCE, WELFARE_AMOUNT
 
 
 @ensure_auth
@@ -18,3 +19,11 @@ async def command_balance(client: Client, message: Message) -> Message:
     
     text = f'{user_name} 的余额：**{balance}**'
     return await message.reply_text(text, quote=False)
+
+
+def bankrupt_relief():
+    """At the start of a day, give relief to users below minimum balance"""
+    for user_id, balance in user_balance.balances.items():
+        if balance < MINIMUM_BALANCE:
+            logging.info(f'User {user_id} balance {balance} below minimum. Adding welfare {WELFARE_AMOUNT}.')
+            user_balance.add_balance(user_id, WELFARE_AMOUNT)

@@ -22,7 +22,7 @@ game_table = GameTable()
 
 
 async def message_edit(message: Message, text: str, sleep_time: float = 1, reply_markup=None) -> Message:
-    reply = await message.edit_text(text, **no_preview, reply_markup=reply_markup)
+    reply = await message.edit_text(text, reply_markup=reply_markup, **no_preview)
     await asyncio.sleep(sleep_time)
     return reply
 
@@ -45,15 +45,14 @@ def get_msg_link(chat: Chat, msg_id: int) -> str:
 def create_betting_keyboard(chat_id: int) -> InlineKeyboardMarkup:
     """Create betting buttons"""
     bet_amounts = [10, 50, 100, 500, 'all']
-    keyboard = []
-    
+
     # Bet type buttons
-    keyboard.append([
+    keyboard = [[
         InlineKeyboardButton("闲家 (1:1)", callback_data=f"bet_{chat_id}_player"),
         InlineKeyboardButton("庄家 (0.95:1)", callback_data=f"bet_{chat_id}_banker"),
         InlineKeyboardButton("和局 (8:1)", callback_data=f"bet_{chat_id}_tie")
-    ])
-    
+    ]]
+
     # Amount buttons
     amount_row = []
     for amount in bet_amounts:
@@ -119,22 +118,30 @@ async def start_baccarat(client: Client, message: Message) -> Optional[Message]:
     betting_state.start_betting(chat_id, 0)  # msg_id will be set after reply
     betting_keyboard = create_betting_keyboard(chat_id)
 
-    betting_text = text
-    betting_text += '现在是下注时间！\n'
-    betting_text += '请选择下注类型和金额。\n\n'
-    betting_text += '**当前下注情况：**\n'
-    betting_text += await format_betting_status(chat_id, client)
-    
-    reply = await message.reply_text(
-        betting_text,
-        quote=False, 
-        reply_markup=betting_keyboard
-    )
-    game_status.set_in_game(chat_id, '百家乐', reply.id)
-    betting_state.game_data[chat_id]['msg_id'] = reply.id
-    
-    # Wait for betting (30 seconds)
-    await asyncio.sleep(30)
+
+    wait_seconds = 60
+    update_interval = 10
+    reply = None
+    # update for every 10 seconds
+    for i in range(wait_seconds // update_interval):
+        betting_text = text
+        betting_text += f'现在是下注时间！距离停止下注还有{wait_seconds - i * update_interval}秒。\n'
+        betting_text += '请选择下注类型和金额。\n\n'
+        betting_text += '**当前下注情况：**\n'
+        betting_text += await format_betting_status(chat_id, client)
+
+        if not reply:
+            reply = await message.reply_text(
+                betting_text,
+                quote=False,
+                reply_markup=betting_keyboard,
+            )
+            game_status.set_in_game(chat_id, '百家乐', reply.id)
+            betting_state.game_data[chat_id]['msg_id'] = reply.id
+            await asyncio.sleep(10)
+        else:
+            reply = await message_edit(reply, betting_text, update_interval, betting_keyboard)
+
     
     # Close betting
     betting_state.close_betting(chat_id)
