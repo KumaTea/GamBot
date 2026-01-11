@@ -10,3 +10,5 @@ tmp
 *.session*
 *.log
 patches
+uv.lock
+.python-version

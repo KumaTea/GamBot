@@ -25,7 +25,7 @@ def register_handlers():
     bot.add_handler(MessageHandler(command_free, filters.command(['free', 'free_games']) & filters.group))
     bot.add_handler(MessageHandler(command_baccarat, filters.command(['baccarat', 'bjl']) & filters.group))
     bot.add_handler(MessageHandler(command_balance, filters.command(['balance', '余额', 'money']) & filters.group))
-    bot.add_handler(CallbackQueryHandler(handle_baccarat_callback, filters.regex(r'^(bet|amount|confirm)_')))
+    bot.add_handler(CallbackQueryHandler(handle_baccarat_callback, filters.regex(r'^(bet|amount|confirm|cancel)_')))
 
     # stickers
     bot.add_handler(MessageHandler(command_bro, filters.command(['bro']) & filters.group))

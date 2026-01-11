@@ -3,7 +3,7 @@
 pillow
 aiohttp
 kurigram
-apscheduler
+apscheduler<3.11
 
 # pip
 telethon

@@ -3,13 +3,14 @@ import asyncio
 from typing import Optional
 from pyrogram import Client
 from bot.tools import get_user_name
+from share.common import no_preview
 from common.data import BACCARAT_RULE
+from games.balance import user_balance
 from func.games.share import game_status
-from func.games.balance import user_balance
 from func.games.betting import betting_state
 from games.cards.card import Card, generate_deck
+from pyrogram.types import Chat, Message, InlineKeyboardButton, InlineKeyboardMarkup
 from games.cards.baccarat import BaccaratDeck, banker_should_draw, player_should_draw
-from pyrogram.types import Chat, Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
 
 class GameTable:
@@ -21,14 +22,14 @@ game_table = GameTable()
 
 
 async def message_edit(message: Message, text: str, sleep_time: float = 1, reply_markup=None) -> Message:
-    reply = await message.edit_text(text, disable_web_page_preview=True, reply_markup=reply_markup)
+    reply = await message.edit_text(text, **no_preview, reply_markup=reply_markup)
     await asyncio.sleep(sleep_time)
     return reply
 
 
-def gen_baccarat_deck() -> BaccaratDeck:
+def gen_baccarat_deck(num: int = 8) -> BaccaratDeck:
     deck = generate_deck()
-    deck *= 8
+    deck *= num
     return BaccaratDeck(deck=deck)
 
 
@@ -43,7 +44,7 @@ def get_msg_link(chat: Chat, msg_id: int) -> str:
 
 def create_betting_keyboard(chat_id: int) -> InlineKeyboardMarkup:
     """Create betting buttons"""
-    bet_amounts = [10, 50, 100, 500]
+    bet_amounts = [10, 50, 100, 500, 'all']
     keyboard = []
     
     # Bet type buttons
@@ -56,10 +57,16 @@ def create_betting_keyboard(chat_id: int) -> InlineKeyboardMarkup:
     # Amount buttons
     amount_row = []
     for amount in bet_amounts:
-        amount_row.append(InlineKeyboardButton(f"{amount}", callback_data=f"amount_{chat_id}_{amount}"))
+        if amount == 'all':
+            amount_row.append(InlineKeyboardButton("梭哈", callback_data=f"amount_{chat_id}_all"))
+        else:
+            amount_row.append(InlineKeyboardButton(f"{amount}", callback_data=f"amount_{chat_id}_{amount}"))
     keyboard.append(amount_row)
     
-    keyboard.append([InlineKeyboardButton("确认下注", callback_data=f"confirm_{chat_id}_0")])
+    keyboard.append([
+        InlineKeyboardButton("取消", callback_data=f"cancel_{chat_id}_0"),
+        InlineKeyboardButton("下注", callback_data=f"confirm_{chat_id}_0")
+    ])
     
     return InlineKeyboardMarkup(keyboard)
 
@@ -99,7 +106,7 @@ async def start_baccarat(client: Client, message: Message) -> Optional[Message]:
         return await message.reply_text(
             f'本群正在玩{game}，[这局]({msg_link})结束后才能开始！',
             quote=False,
-            disable_web_page_preview=True
+            **no_preview
         )
 
     # announce
@@ -111,14 +118,15 @@ async def start_baccarat(client: Client, message: Message) -> Optional[Message]:
     # Start betting phase
     betting_state.start_betting(chat_id, 0)  # msg_id will be set after reply
     betting_keyboard = create_betting_keyboard(chat_id)
-    
-    text += '现在是下注时间！\n'
-    text += '请选择下注类型和金额。\n\n'
-    text += '**当前下注情况：**\n'
-    text += await format_betting_status(chat_id, client)
+
+    betting_text = text
+    betting_text += '现在是下注时间！\n'
+    betting_text += '请选择下注类型和金额。\n\n'
+    betting_text += '**当前下注情况：**\n'
+    betting_text += await format_betting_status(chat_id, client)
     
     reply = await message.reply_text(
-        text, 
+        betting_text,
         quote=False, 
         reply_markup=betting_keyboard
     )
@@ -130,7 +138,7 @@ async def start_baccarat(client: Client, message: Message) -> Optional[Message]:
     
     # Close betting
     betting_state.close_betting(chat_id)
-    text += '\n\n下注时间已结束！\n'
+    text += '\n下注时间已结束！\n'
     text += '**最终下注情况：**\n'
     text += await format_betting_status(chat_id, client)
     reply = await message_edit(reply, text, 2, reply_markup=None)
@@ -204,18 +212,19 @@ async def start_baccarat(client: Client, message: Message) -> Optional[Message]:
     # Store game result
     betting_state.set_game_result(chat_id, result, player_value, banker_value)
     
-    text += f'\n结果是：**{result_text}**！\n'
+    game_result_text = f'结果是：**{result_text}**！'
+    text += '\n' + game_result_text + '\n'
     reply = await message_edit(reply, text, 2)
     
     # Process bets and update balances
     bets = betting_state.get_bets(chat_id)
     if bets:
-        text += '\n**结算结果：**\n'
+        settle_text = '**结算结果：**\n'
         for user_id, bet_info in bets.items():
             bet_type = bet_info['bet_type']
             amount = bet_info['amount']
             
-            # Get user name
+            # Get user nickname
             try:
                 user = await client.get_users(user_id)
                 user_name = get_user_name(user)
@@ -234,12 +243,13 @@ async def start_baccarat(client: Client, message: Message) -> Optional[Message]:
                 profit = winnings  # - amount
                 new_balance = user_balance.add_balance(user_id, profit)
                 bet_type_name = {'player': '闲家', 'banker': '庄家', 'tie': '和局'}[bet_type]
-                text += f'✓ {user_name}: 下注{bet_type_name} {amount} → 赢得 {winnings} (余额: {new_balance})\n'
+                settle_text += f'✓ {user_name}: 下注{bet_type_name} {amount} → 赢得 {winnings} (余额: {new_balance})\n'
             else:
                 # Loss
                 new_balance = user_balance.get_balance(user_id)  # Already deducted when bet was placed
                 bet_type_name = {'player': '闲家', 'banker': '庄家', 'tie': '和局'}[bet_type]
-                text += f'✗ {user_name}: 下注{bet_type_name} {amount} → 输掉 (余额: {new_balance})\n'
+                settle_text += f'✗ {user_name}: 下注{bet_type_name} {amount} → 输掉 (余额: {new_balance})\n'
+        text += '\n' + settle_text
 
     text += '\n' + '点击 /baccarat 再来一局！'
     reply = await message_edit(reply, text, 2)
@@ -248,4 +258,13 @@ async def start_baccarat(client: Client, message: Message) -> Optional[Message]:
     betting_state.clear_game(chat_id)
     game_status.game_over(chat_id)
 
+    # clean up text
+
+    await asyncio.sleep(600)
+    clean_text = '百家乐 /baccarat\n'
+    clean_text += game_result_text
+    if bets:
+        clean_text += '\n' + settle_text
+
+    reply = await message_edit(reply, clean_text)
     return reply

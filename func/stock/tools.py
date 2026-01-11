@@ -3,6 +3,7 @@ from io import BytesIO
 from pyrogram import Client
 from typing import Tuple, Optional
 from pyrogram.types import Message
+from share.common import no_preview
 from stock.tools import is_trading_time
 from stock.main import query, stock_cache
 
@@ -37,16 +38,14 @@ async def send_and_cache(
             img = await message.reply_photo(price_img, quote=False)
             price_img_id = img.photo.file_id
             stock_cache.save(stock_summary, updown_bar, price_img_id)
-            return await message.reply_text(text, disable_web_page_preview=True, quote=False)
         else:
             await message.reply_photo(price_img_id, quote=False)
-            return await message.reply_text(text, disable_web_page_preview=True, quote=False)
+        return await message.reply_text(text, **no_preview)
     else:
         if price_img:
             img = await client.send_photo(chat_id, photo=price_img)
             price_img_id = img.photo.file_id
             stock_cache.save(stock_summary, updown_bar, price_img_id)
-            return await client.send_message(chat_id, text, disable_web_page_preview=True)
         else:
             await client.send_photo(chat_id, photo=price_img_id)
-            return await client.send_message(chat_id, text, disable_web_page_preview=True)
+        return await client.send_message(chat_id, text, **no_preview)

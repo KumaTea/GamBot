@@ -1,8 +1,9 @@
 from typing import Optional
 from pyrogram import Client
 from share.auth import ensure_auth
+from share.common import no_preview
+from games.balance import user_balance
 from pyrogram.types import CallbackQuery
-from func.games.balance import user_balance
 from func.games.betting import betting_state
 from func.games.baccarat import format_betting_status
 
@@ -45,13 +46,40 @@ async def handle_baccarat_callback(client: Client, callback: CallbackQuery) -> O
     
     # Handle amount selection
     elif action == 'amount' and len(data_parts) == 3:
-        amount = int(data_parts[2])
+        amount_str = data_parts[2]
         
         if user_id not in temp_bets:
-            temp_bets[user_id] = {}
-        temp_bets[user_id]['amount'] = amount
+            temp_bets[user_id] = {'amount': 0}
+        elif 'amount' not in temp_bets[user_id]:
+            temp_bets[user_id]['amount'] = 0
         
-        await callback.answer(f'已选择金额：{amount}', show_alert=False)
+        current_balance = user_balance.get_balance(user_id)
+        current_amount = temp_bets[user_id]['amount']
+        
+        if amount_str == 'all':
+            # Set to all available balance
+            temp_bets[user_id]['amount'] = current_balance
+            await callback.answer(f'已选择全部余额：{current_balance}', show_alert=False)
+        else:
+            # Accumulate amount
+            add_amount = int(amount_str)
+            new_amount = current_amount + add_amount
+            
+            # Don't exceed balance
+            if new_amount > current_balance:
+                temp_bets[user_id]['amount'] = current_balance
+                await callback.answer(f'已达到最大余额：{current_balance}', show_alert=False)
+            else:
+                temp_bets[user_id]['amount'] = new_amount
+                await callback.answer(f'已选择金额：{new_amount} (+{add_amount})', show_alert=False)
+        
+        return None
+    
+    # Handle bet cancellation
+    elif action == 'cancel':
+        if user_id in temp_bets:
+            del temp_bets[user_id]
+        await callback.answer('已取消下注', show_alert=False)
         return None
     
     # Handle bet confirmation
@@ -61,7 +89,7 @@ async def handle_baccarat_callback(client: Client, callback: CallbackQuery) -> O
             return None
         
         bet_info = temp_bets[user_id]
-        if 'bet_type' not in bet_info or 'amount' not in bet_info:
+        if 'bet_type' not in bet_info or 'amount' not in bet_info or bet_info.get('amount', 0) <= 0:
             await callback.answer('请先选择下注类型和金额！', show_alert=True)
             return None
         
@@ -119,7 +147,7 @@ async def handle_baccarat_callback(client: Client, callback: CallbackQuery) -> O
                     updated_text = '\n'.join(updated_lines)
                     await message.edit_text(
                         updated_text,
-                        disable_web_page_preview=True,
+                        **no_preview,
                         reply_markup=message.reply_markup
                     )
             except Exception:

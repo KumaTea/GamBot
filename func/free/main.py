@@ -2,6 +2,7 @@ import asyncio
 from pyrogram import Client
 from share.auth import ensure_auth
 from pyrogram.types import Message
+from share.common import no_preview
 from func.free.steam import STEAM_FREE_URL
 from func.free.epic import EPIC_FREE_URL, epic_game_info, epic_free_games_list, get_epic_free_games_json
 from func.free.steam import steam_games_raw, steam_games_dict, steam_games_raw_list, steam_free_games_dict
@@ -52,4 +53,4 @@ async def command_free(client: Client, message: Message) -> Message:
         epic_free_games()
     )
     text = f'{steam}\n\n{epic}'
-    return await inform.edit_text(text, disable_web_page_preview=True)
+    return await inform.edit_text(text, **no_preview)
