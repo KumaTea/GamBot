@@ -3,9 +3,9 @@ from io import BytesIO
 from pyrogram import Client
 from typing import Tuple, Optional
 from pyrogram.types import Message
-from share.common import no_preview
 from stock.tools import is_trading_time
 from stock.main import query, stock_cache
+from share.common import no_quote, no_preview
 
 
 async def query_stock() -> Tuple[str, str, Optional[BytesIO], Optional[str]]:
@@ -35,11 +35,11 @@ async def send_and_cache(
     text = f'{stock_summary}\n{updown_bar}'
     if message:
         if price_img:
-            img = await message.reply_photo(price_img, quote=False)
+            img = await message.reply_photo(price_img, **no_quote)
             price_img_id = img.photo.file_id
             stock_cache.save(stock_summary, updown_bar, price_img_id)
         else:
-            await message.reply_photo(price_img_id, quote=False)
+            await message.reply_photo(price_img_id, **no_quote)
         return await message.reply_text(text, **no_preview)
     else:
         if price_img:

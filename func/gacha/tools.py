@@ -1,6 +1,7 @@
 import aiohttp
 import logging
 from io import BytesIO
+from share.common import no_quote
 from pyrogram.types import Message
 from common.data import LOADING_DEFAULT
 from pyrogram.types import InputMediaPhoto
@@ -21,7 +22,7 @@ async def result_sender(incoming_msg: Message, text: str, image: str, loading_im
     if 'https://' in image:
         loading = await incoming_msg.reply_photo(
             photo=loading_img,
-            quote=False,
+            **no_quote,
             caption=text
         )
         try:
@@ -43,7 +44,7 @@ async def result_sender(incoming_msg: Message, text: str, image: str, loading_im
     else:
         reply = await incoming_msg.reply_photo(
             photo=image,
-            quote=False,
+            **no_quote,
             caption=text
         )
     return reply

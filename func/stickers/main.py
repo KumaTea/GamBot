@@ -1,5 +1,6 @@
 import math
 from pyrogram import Client
+from share.common import no_quote
 from share.auth import ensure_auth
 from pyrogram.types import Message
 from func.stickers.tools import to_webp
@@ -27,7 +28,7 @@ async def command_bro(client: Client, message: Message) -> Message:
         # /bro
         # sticker_text = f'{starting}你没写字'
         # sticker = draw_bro(sticker_text)
-        resp = await message.reply_sticker(BRO_EMPTY, quote=False)
+        resp = await message.reply_sticker(BRO_EMPTY, **no_quote)
     else:
         # has text
         # /bro example
@@ -35,13 +36,13 @@ async def command_bro(client: Client, message: Message) -> Message:
         if get_text_length(content) > max_length:
             # sticker_text = f'{starting}最多五个字'
             # sticker = draw_bro(sticker_text)
-            resp = await message.reply_sticker(BRO_TOO_LONG, quote=False)
+            resp = await message.reply_sticker(BRO_TOO_LONG, **no_quote)
         else:
             sticker_text = f'{starting}{content}'
             sticker = draw_bro(sticker_text)
             if reply:
                 resp = await reply.reply_sticker(to_webp(sticker))
             else:
-                resp = await message.reply_sticker(to_webp(sticker), quote=False)
+                resp = await message.reply_sticker(to_webp(sticker), **no_quote)
     # logging.info(f'[bro] {sticker_text=}\t{resp.sticker.file_id=}')
     return resp

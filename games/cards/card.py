@@ -1,5 +1,5 @@
-import random
 from typing import List, Union
+from bot.session import urandom
 from games.cards.data import CARD_SYMBOLS
 
 
@@ -104,7 +104,7 @@ class Deck:
             self.cards = []
 
     def shuffle(self) -> None:
-        random.shuffle(self.cards)
+        urandom.shuffle(self.cards)
 
     def deal(self) -> Card:
         return self.cards.pop(0)

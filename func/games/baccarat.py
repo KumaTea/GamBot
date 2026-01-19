@@ -1,13 +1,13 @@
-import random
 import asyncio
 from typing import Optional
 from pyrogram import Client
+from bot.session import urandom
 from bot.tools import get_user_name
-from share.common import no_preview
 from common.data import BACCARAT_RULE
 from games.balance import user_balance
 from func.games.share import game_status
 from func.games.betting import betting_state
+from share.common import no_quote, no_preview
 from games.cards.card import Card, generate_deck
 from pyrogram.types import Chat, Message, InlineKeyboardButton, InlineKeyboardMarkup
 from games.cards.baccarat import BaccaratDeck, banker_should_draw, player_should_draw
@@ -104,7 +104,7 @@ async def start_baccarat(client: Client, message: Message) -> Optional[Message]:
         msg_link = get_msg_link(message.chat, game_status.groups[chat_id]['msg_id'])
         return await message.reply_text(
             f'本群正在玩{game}，[这局]({msg_link})结束后才能开始！',
-            quote=False,
+            **no_quote,
             **no_preview
         )
 
@@ -133,7 +133,7 @@ async def start_baccarat(client: Client, message: Message) -> Optional[Message]:
         if not reply:
             reply = await message.reply_text(
                 betting_text,
-                quote=False,
+                **no_quote,
                 reply_markup=betting_keyboard,
             )
             game_status.set_in_game(chat_id, '百家乐', reply.id)
@@ -156,7 +156,7 @@ async def start_baccarat(client: Client, message: Message) -> Optional[Message]:
         text += '发牌箱是空的。荷官拿了8副牌过来。\n'
         reply = await message_edit(reply, text, 5)
 
-        shuffle_times = random.randint(1, 10)
+        shuffle_times = urandom.randint(1, 10)
         for _ in range(shuffle_times):
             deck.shuffle()
         game_table.groups[chat_id] = deck

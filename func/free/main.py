@@ -1,11 +1,11 @@
 import asyncio
+import aiohttp
 from pyrogram import Client
 from share.auth import ensure_auth
 from pyrogram.types import Message
-from share.common import no_preview
-from func.free.steam import STEAM_FREE_URL
-from func.free.epic import EPIC_FREE_URL, epic_game_info, epic_free_games_list, get_epic_free_games_json
-from func.free.steam import steam_games_raw, steam_games_dict, steam_games_raw_list, steam_free_games_dict
+from share.common import no_quote, no_preview
+from func.free.epic import EPIC_FREE_URL, EPIC_FREE_API, epic_game_info, epic_free_games_list, get_epic_free_games_json
+from func.free.steam import STEAM_FREE_URL, steam_games_raw, steam_games_dict, steam_games_raw_list, steam_free_games_dict
 
 
 async def steam_free_games() -> str:
@@ -45,10 +45,26 @@ async def epic_free_games() -> str:
     return text
 
 
+async def test_network() -> None:
+    try:
+        async with aiohttp.ClientSession() as session:
+            tasks = [
+                session.get(EPIC_FREE_API),
+                session.get(EPIC_FREE_URL),
+                session.get(STEAM_FREE_URL)
+            ]
+            await asyncio.gather(*tasks)
+    except:
+        await asyncio.sleep(2)
+
+
 @ensure_auth
 async def command_free(client: Client, message: Message) -> Message:
-    inform, steam, epic = await asyncio.gather(
-        message.reply_text('正在获取...', quote=False),
+    inform, _ = await asyncio.gather(
+        message.reply_text('正在测试网络...', **no_quote),
+        test_network()
+    )
+    steam, epic = await asyncio.gather(
         steam_free_games(),
         epic_free_games()
     )

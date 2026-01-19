@@ -1,4 +1,5 @@
 from pyrogram import Client
+from share.common import no_quote
 from share.auth import ensure_auth
 from pyrogram.types import Message
 from stock.main import stock_reminder
@@ -21,7 +22,7 @@ async def command_remind_stock(client: Client, message: Message) -> Message:
     else:
         text = '您已经设定了投资提醒'
     text += '\n\n可使用 /forget_stock 取消投资提醒'
-    return await message.reply_text(text, quote=False)
+    return await message.reply_text(text, **no_quote)
 
 
 @ensure_auth
@@ -34,4 +35,4 @@ async def command_forget_stock(client: Client, message: Message) -> Message:
     else:
         text = '您尚未设定投资提醒'
     text += '\n\n可使用 /remind_stock 设定投资提醒'
-    return await message.reply_text(text, quote=False)
+    return await message.reply_text(text, **no_quote)

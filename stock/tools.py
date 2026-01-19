@@ -89,4 +89,4 @@ def invest_suggestion(price: float) -> str:
     elif price < 3200:
         return '适当减仓'
     else:
-        return '忄夬足包' + '！' * int((price - 3200) / 100)
+        return '忄夬足包' + '！ ' * int((price - 3200) / 100)

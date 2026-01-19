@@ -2,13 +2,13 @@ import asyncio
 import logging
 from typing import Optional
 from pyrogram import Client
+from share.common import no_quote
 from bot.tools import get_user_name
 from gacha.groupmem.store import user_photos
 from pyrogram.types import Message, ChatMember
 from gacha.groupmem.main import gacha, grp_data
 from share.local import bl_users, trusted_group
 from bot.raw import send_photo, get_user_profile_photo
-
 
 def is_qualified_user(member: ChatMember):
     user = member.user
@@ -68,7 +68,7 @@ async def gacha_group_member(client: Client, message: Message) -> Optional[Messa
             return await message.reply_photo(
                 photo=photo,
                 caption=msg_text,
-                quote=False
+                **no_quote
             )
         except ValueError:
             raw_photo = photo
@@ -85,4 +85,4 @@ async def gacha_group_member(client: Client, message: Message) -> Optional[Messa
             return None
     else:
         msg_text = f'你抽中了 {name}，但是他不肯出来露脸，你可以重新抽一个。'
-        return await message.reply_text(msg_text, quote=False)
+        return await message.reply_text(msg_text, **no_quote)

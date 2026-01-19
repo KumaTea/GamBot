@@ -1,6 +1,7 @@
 import random
 import asyncio
 from pyrogram import Client
+from share.common import no_quote
 from share.auth import ensure_auth
 from pyrogram.types import Message
 from common.info import administrators
@@ -22,7 +23,7 @@ pools = {
 async def command_gacha(client: Client, message: Message) -> Message:
     content = get_command_content(message)
     if not content:
-        # return await message.reply_text('你没有指定池子！', quote=False)
+        # return await message.reply_text('你没有指定池子！', **no_quote)
         match = random.choice(list(pools.keys()))
     else:
         match = None
@@ -37,7 +38,7 @@ async def command_gacha(client: Client, message: Message) -> Message:
     elif match == 'groupmem':
         return await gacha_group_member(client, message)
 
-    return await message.reply_text('找不到指定的池子！', quote=False)
+    return await message.reply_text('找不到指定的池子！', **no_quote)
 
 
 @ensure_auth
@@ -63,5 +64,5 @@ async def force_refresh(client: Client, message: Message):
         return None
     await asyncio.gather(
         run_pic_bot(chat_id, forced=True),
-        message.reply_text(f'已强制刷新群 {chat_id} 的头像！', quote=False)
+        message.reply_text(f'已强制刷新群 {chat_id} 的头像！', **no_quote)
     )
