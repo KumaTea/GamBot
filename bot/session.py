@@ -1,8 +1,7 @@
 import random
 import logging
-import pyrogram
 import configparser
-from pyrogram import Client
+from telethon import TelegramClient
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 
@@ -13,16 +12,15 @@ logging.basicConfig(
 
 config = configparser.ConfigParser()
 config.read('config.ini')
-bot = Client(
+
+BOT_TOKEN = config['jd']['bot_token']
+
+bot = TelegramClient(
     'jd',
-    api_id=config['jd']['api_id'],
-    api_hash=config['jd']['api_hash'],
-    bot_token=config['jd']['bot_token'],
+    int(config['jd']['api_id']),
+    config['jd']['api_hash'],
 )
 
 scheduler = AsyncIOScheduler()
-
-pyrogram_version = tuple(map(int, pyrogram.__version__.split('.')))
-is_old_pyrogram = pyrogram_version <= (2, 0, 106)
 
 urandom = random.SystemRandom()

@@ -1,18 +1,16 @@
 # common
-# conda
-pillow
 aiohttp
-kurigram
 apscheduler<3.11
-
-# pip
+pillow
 telethon
 
-# crawl
+# optional, but a large speed-up for MTProto crypto:
+# cryptg
+
+# crawl -- only needed by `python -m gacha.refresh`
 tqdm
 requests
 beautifulsoup4
 
 # stock
-# pip
 chinesecalendar

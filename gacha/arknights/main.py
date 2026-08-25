@@ -1,45 +1,9 @@
 import json
 import random
+import logging
 
 
-operator_data_file = 'data/arknights/ops.json'
-
-
-class ArkData:
-    def __init__(self):
-        self.char = {}
-        self.load()
-
-    def load(self):
-        with open(operator_data_file, 'r', encoding='utf-8') as f:
-            self.char = json.load(f)
-
-    def save_img_id(self, name: str, url: str, img_id: str):
-        data = self.char[name]
-        if data['initial'] == url:
-            data['initial'] = img_id
-        elif data['promoted'] == url:
-            data['promoted'] = img_id
-        elif data['skins']:
-            for i in range(len(data['skins'])):
-                if data['skins'][i] == url:
-                    data['skins'][i] = img_id
-                    break
-        elif data['others']:
-            for i in range(len(data['others'])):
-                if data['others'][i] == url:
-                    data['others'][i] = img_id
-                    break
-        self.char[name] = data
-        with open(operator_data_file, 'w', encoding='utf-8') as f:
-            json.dump(self.char, f, ensure_ascii=False, indent=2)
-
-
-ark_data = ArkData()
-
-ops_by_rarity = {}
-for r in range(1, 7):
-    ops_by_rarity[r] = [name for name in ark_data.char if ark_data.char[name]['rarity'] == r]
+OPERATOR_DATA_FILE = 'data/arknights/ops.json'
 
 gacha_rate = {
     1: 0.03,
@@ -51,19 +15,62 @@ gacha_rate = {
 }
 
 
+def usable_images(entry: dict) -> list:
+    """
+    Every picture of an operator that can actually be sent.
+
+    The old data mixes wiki urls with Bot API file ids left over from
+    the pyrogram build; only the urls are any use now.
+    """
+    candidates = [entry.get('initial'), entry.get('promoted')]
+    candidates += entry.get('skins') or []
+    candidates += entry.get('others') or []
+    return [i for i in candidates if str(i).startswith('http')]
+
+
+class ArkData:
+    def __init__(self):
+        self.char = {}
+        self.images = {}
+        self.load()
+
+    def load(self):
+        with open(OPERATOR_DATA_FILE, 'r', encoding='utf-8') as f:
+            everything = json.load(f)
+
+        self.char = {}
+        self.images = {}
+        for name, entry in everything.items():
+            if not entry:
+                continue
+            images = usable_images(entry)
+            if not images:
+                continue
+            self.char[name] = entry
+            self.images[name] = images
+
+        missing = len(everything) - len(self.char)
+        if missing:
+            logging.warning(
+                f'[gacha]\tarknights: {missing} of {len(everything)} operators have no '
+                f'image url; run `python -m gacha.refresh arknights`')
+
+
+ark_data = ArkData()
+
+ops_by_rarity = {
+    r: [name for name, e in ark_data.char.items() if e['rarity'] == r]
+    for r in range(1, 7)
+}
+
+
 def char_select():
-    rarity = random.choices(list(gacha_rate.keys()), weights=list(gacha_rate.values()))[0]
-    char = random.choice(ops_by_rarity[rarity])
-    return char, rarity
+    pools = [r for r in gacha_rate if ops_by_rarity.get(r)]
+    weights = [gacha_rate[r] for r in pools]
+    rarity = random.choices(pools, weights=weights)[0]
+    return random.choice(ops_by_rarity[rarity]), rarity
 
 
 def gacha():
     char, rarity = char_select()
-    char_data = ark_data.char[char]
-    images = [char_data['initial']]
-    if char_data['promoted']:
-        images.append(char_data['promoted'])
-    images.extend(char_data['skins'])
-    images.extend(char_data['others'])
-    image = random.choice(images)
-    return char, image, rarity
+    return char, random.choice(ark_data.images[char]), rarity

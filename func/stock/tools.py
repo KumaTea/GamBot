@@ -1,51 +1,62 @@
-from time import time
 from io import BytesIO
-from pyrogram import Client
-from typing import Tuple, Optional
-from pyrogram.types import Message
-from stock.tools import is_trading_time
+from time import time
+from typing import Optional, Tuple
+from share.common import no_preview
+from telethon.tl.custom import Message
+from telethon import TelegramClient as Client
 from stock.main import query, stock_cache
-from share.common import no_quote, no_preview
+from stock.tools import is_trading_time
 
 
-async def query_stock() -> Tuple[str, str, Optional[BytesIO], Optional[str]]:
-    now_timestamp = int(time())
+def is_stale() -> bool:
+    """
+    Whether the cached index summary is worth showing again.
+
+    Half a minute is nothing while the market is open and an eternity
+    once it has closed, so the two cases get different patience.
+    """
+    now = int(time())
+    age = now - stock_cache.last_timestamp
     trading = is_trading_time()
-    no_cache = False
-    if trading and now_timestamp - stock_cache.last_timestamp > 30:
-        no_cache = True
-    elif now_timestamp - stock_cache.last_timestamp > 2 * 60 * 60:  # 2 hours
-        no_cache = True
-    elif trading != stock_cache.trading:
-        no_cache = True
-    stock_summary, updown_bar, price_img, price_img_id = await query(trading, no_cache)
-    return stock_summary, updown_bar, price_img, price_img_id
+    return (
+        (trading and age > 30) or
+        age > 2 * 60 * 60 or
+        trading != stock_cache.trading
+    )
 
 
-async def send_and_cache(
+async def query_stock() -> Tuple[str, str, Optional[bytes]]:
+    return await query(is_trading_time(), is_stale())
+
+
+def as_image(content: bytes) -> Optional[BytesIO]:
+    if not content:
+        return None
+    image = BytesIO(content)
+    # Sina serves png for the mainland and gif elsewhere; Telegram works
+    # the real type out for itself, the name is only a label
+    image.name = 'stock.gif' if content[:3] == b'GIF' else 'stock.png'
+    return image
+
+
+async def send_stock(
         stock_summary: str,
-        updown_bar: str,
-        price_img: BytesIO = None,
-        price_img_id: str = None,
+        updown_bar: str = '',
+        price_img: bytes = None,
         client: Client = None,
         chat_id: int = None,
-        message: Message = None
+        event=None
 ) -> Message:
-    assert (client and chat_id) or message
-    text = f'{stock_summary}\n{updown_bar}'
-    if message:
-        if price_img:
-            img = await message.reply_photo(price_img, **no_quote)
-            price_img_id = img.photo.file_id
-            stock_cache.save(stock_summary, updown_bar, price_img_id)
-        else:
-            await message.reply_photo(price_img_id, **no_quote)
-        return await message.reply_text(text, **no_preview)
-    else:
-        if price_img:
-            img = await client.send_photo(chat_id, photo=price_img)
-            price_img_id = img.photo.file_id
-            stock_cache.save(stock_summary, updown_bar, price_img_id)
-        else:
-            await client.send_photo(chat_id, photo=price_img_id)
-        return await client.send_message(chat_id, text, **no_preview)
+    """The chart and the numbers, as one message when there is a chart."""
+    assert (client and chat_id) or event
+    text = f'{stock_summary}\n{updown_bar}' if updown_bar else stock_summary
+    image = as_image(price_img)
+
+    if event:
+        if image:
+            return await event.respond(text, file=image, **no_preview)
+        return await event.respond(text, **no_preview)
+
+    if image:
+        return await client.send_message(chat_id, text, file=image, **no_preview)
+    return await client.send_message(chat_id, text, **no_preview)

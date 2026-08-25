@@ -1,8 +1,8 @@
 import asyncio
 from bot.session import bot
-from common.data import TEASPS_ID
-from pyrogram.types import Message
 from share.common import no_preview
+from common.data import TEASPS_ID
+from telethon.tl.custom import Message
 from stock.tools import is_trading_day
 from datetime import datetime, timedelta
 from func.free.main import epic_free_games, steam_free_games, test_network
@@ -26,4 +26,4 @@ async def remind_free() -> Message:
     if is_trading_day(yesterday):
         tasks.append('查看盈亏')
     text += '另外，可以' + '、'.join(tasks) + '了'
-    return await inform.edit_text(text, **no_preview)
+    return await inform.edit(text, **no_preview)

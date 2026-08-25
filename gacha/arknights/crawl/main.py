@@ -1,134 +1,128 @@
-import csv
+"""
+Rebuild the operator pool from the game's own data.
+
+The old version scraped prts.wiki and needed a hand-maintained csv of
+operator names to start from. Both of those are gone: the game data and
+the artwork are published as plain files, so a refresh is now one run
+with nothing to prepare.
+"""
 import json
 import requests
 from tqdm import tqdm
-from bs4 import BeautifulSoup
+from urllib.parse import quote
+from collections import defaultdict
+from share.data import USER_AGENT
 
 
-operator_file = 'data/arknights/op.csv'
-header = 'sortId,name,rarity,approach,date'.split(',')
-wiki_file_url = 'https://prts.wiki/w/%E6%96%87%E4%BB%B6:'
 operator_data_file = 'data/arknights/ops.json'
 
+GAME_DATA = ('https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData'
+             '/master/zh_CN/gamedata/excel/{table}.json')
+PORTRAIT = ('https://raw.githubusercontent.com/yuanyan3060/ArknightsGameResource'
+            '/main/portrait/{portrait}.png')
 
-def get_wiki_image(filename):
-    url = wiki_file_url + filename
-    r = requests.get(url)
-    if r.status_code != 200:
-        print('\nerror: ' + url)
-        return ''
-    soup = BeautifulSoup(r.text, 'html.parser')
-    link = (
-        soup.find('a', string='原始文件')  # 立绘
-        or
-        soup.find('a', string=filename)  # 头像
+HEADERS = {'User-Agent': USER_AGENT}
+TIMEOUT = 60
+
+PROFESSIONS = {
+    'PIONEER': '先锋',
+    'WARRIOR': '近卫',
+    'SNIPER': '狙击',
+    'TANK': '重装',
+    'MEDIC': '医疗',
+    'SUPPORT': '辅助',
+    'CASTER': '术师',
+    'SPECIAL': '特种',
+}
+
+RARITY_TIERS = {f'TIER_{n}': n for n in range(1, 7)}
+
+
+def fetch(table: str) -> dict:
+    r = requests.get(GAME_DATA.format(table=table), headers=HEADERS, timeout=TIMEOUT)
+    r.raise_for_status()
+    return r.json()
+
+
+def portrait_url(portrait_id: str) -> str:
+    """Skin ids carry `#` and `+`, which a url will not take unescaped."""
+    return PORTRAIT.format(portrait=quote(portrait_id, safe=''))
+
+
+def rarity_of(entry: dict) -> int:
+    rarity = entry.get('rarity')
+    if isinstance(rarity, int):
+        # the table used to store a zero-based index
+        return rarity + 1
+    return RARITY_TIERS.get(rarity, 1)
+
+
+def is_operator(char_id: str, entry: dict) -> bool:
+    """
+    Operators, as opposed to enemies, summons and trap devices.
+
+    They live in the same table, and the ones a player can actually own
+    are the ones with a handbook number that are still obtainable.
+    """
+    return bool(
+        char_id.startswith('char_') and
+        entry.get('displayNumber') and
+        not entry.get('isNotObtainable')
     )
-    if link:
-        href = link.get('href')
-        full_url = 'https://prts.wiki' + href
-        return full_url
-    else:
-        print('\nerror: ' + url)
-        return None
 
 
-def get_op_info(html):
-    name_start = html.find('var char_info={"name":"')
-    name_end = html.find('","nameEn":"', name_start)
-    rarity_start = html.find('"star":', name_end)
-    rarity_end = html.find(',"group":"', rarity_start)
-    group_start = html.find('"group":"', rarity_end)
-    group_end = html.find('","class":"', group_start)
-    class_start = html.find('"class":"', group_end)
-    class_end = html.find('","branch":"', class_start)
-    branch_start = html.find('"branch":"', class_end)
-    branch_end = html.find('","pos":"', branch_start)
+def portraits_by_char(skins: dict) -> dict:
+    """
+    Every portrait of every operator, base art first.
 
-    name = html[name_start + len('var char_info={"name":"'):name_end]
-    rarity_index = html[rarity_start + len('"star":'):rarity_end]
-    rarity = int(rarity_index) + 1
-    group = html[group_start + len('"group":"'):group_end]
-    op_class = html[class_start + len('"class":"'):class_end]
-    branch = html[branch_start + len('"branch":"'):branch_end]
+    `_1` is the operator as recruited and `_2` is the elite two artwork;
+    everything else is a skin, and the order among those does not matter.
+    """
+    by_char = defaultdict(list)
+    for skin in skins.values():
+        char_id = skin.get('charId')
+        portrait_id = skin.get('portraitId')
+        if char_id and portrait_id:
+            by_char[char_id].append(portrait_id)
 
-    return name, rarity, group, op_class, branch
+    for char_id, ids in by_char.items():
+        by_char[char_id] = sorted(ids, key=lambda p: (
+            0 if p.endswith('_1') else 1 if p.endswith('_2') else 2, p))
+    return by_char
 
 
-def get_images(name: str):
-    initial_name = f'立绘 {name} 1.png'
-    promoted_name = f'立绘 {name} 2.png'
+def build_ops() -> dict:
+    print('fetching game data...')
+    characters = fetch('character_table')
+    skins = fetch('skin_table')['charSkins']
+    branches = fetch('uniequip_table')['subProfDict']
+    powers = fetch('handbook_team_table')
 
-    skins = []
-    initial = get_wiki_image(initial_name)
-    promoted = get_wiki_image(promoted_name)
-    for i in range(1, 10):
-        skin_name = f'立绘 {name} skin{i}.png'
-        skin = get_wiki_image(skin_name)
-        if skin:
-            skins.append(skin)
-        else:
-            break
-
-    return initial, promoted, skins
-
-
-def get_op_data(name: str):
-    url = f'https://prts.wiki/w/{name}'
-    r = requests.get(url)
-    if r.status_code != 200:
-        print('\nerror: ' + url)
-        return None
-
-    _, rarity, group, op_class, branch = get_op_info(r.text)
-    initial, promoted, skins = get_images(name)
-
-    data = {
-        'name': name,
-        'rarity': rarity,
-        'group': group,
-        'class': op_class,
-        'branch': branch,
-        'initial': initial,
-        'promoted': promoted,
-        'skins': skins,
-        'others': []
-    }
-    return data
-
-
-def read_op_csv():
+    art = portraits_by_char(skins)
     ops = {}
-    with open(operator_file, 'r', encoding='utf-8') as f:
-        reader = csv.reader(f)
-        next(reader)
-        for row in reader:
-            sort_id, name, rarity_index, approaches, date = row
-            ops[name] = {
-                'sort_id': sort_id,
-                'name': name,
-                'rarity': int(rarity_index) + 1,
-                'approach': approaches.split(),
-                'date': date
-            }
-    return ops
 
+    for char_id, entry in tqdm(characters.items()):
+        if not is_operator(char_id, entry):
+            continue
 
-def query_ops():
-    ops_csv_data = read_op_csv()
-    for op in ops_csv_data.copy():
-        if int(ops_csv_data[op]['sort_id']) < 0:
-            del ops_csv_data[op]
+        portraits = art.get(char_id) or []
+        urls = [portrait_url(p) for p in portraits]
+        group_id = entry.get('nationId') or entry.get('groupId') or entry.get('teamId')
+        branch = branches.get(entry.get('subProfessionId'), {})
+        approach = entry.get('itemObtainApproach')
 
-    ops = {}
-    pbar = tqdm(ops_csv_data)
-    for op in pbar:
-        pbar.set_description(op)
-        data = get_op_data(op)
-        if data:
-            data['approach'] = ops_csv_data[op]['approach']
-        ops[op] = data
-        # pbar.write(str(data))
-
+        ops[entry['name']] = {
+            'name': entry['name'],
+            'rarity': rarity_of(entry),
+            'group': (powers.get(group_id) or {}).get('powerName', ''),
+            'class': PROFESSIONS.get(entry.get('profession'), ''),
+            'branch': branch.get('subProfessionName', ''),
+            'initial': urls[0] if urls else '',
+            'promoted': urls[1] if len(urls) > 1 else '',
+            'skins': urls[2:],
+            'approach': [approach] if approach else [],
+            'others': [],
+        }
     return ops
 
 
@@ -138,5 +132,4 @@ def save_ops_query_data(ops: dict):
 
 
 if __name__ == '__main__':
-    ops_data = query_ops()
-    save_ops_query_data(ops_data)
+    save_ops_query_data(build_ops())

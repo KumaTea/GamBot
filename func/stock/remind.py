@@ -1,35 +1,31 @@
-import logging
 import asyncio
-from pyrogram import Client
+import logging
 from typing import Optional
 from bot.session import bot
-from pyrogram.types import Message
+from share.common import mention_id
+from telethon.tl.custom import Message
+from telethon import TelegramClient as Client
 from stock.main import stock_reminder
 from stock.tools import is_trading_time
-from bot.tools import add_client_to_user
-from func.stock.tools import query_stock, send_and_cache
+from func.stock.tools import query_stock, send_stock
 
 
 async def remind_stock(client: Client, chat_id: int) -> Optional[Message]:
-    users = stock_reminder.data.get(chat_id, [])
+    users = stock_reminder.data.get(chat_id, {})
     if not users:
         return None
-    users = [add_client_to_user(user, client) for user in users]
     logging.info(f'Reminding stock to {chat_id}')
-    stock_summary, updown_bar, price_img, price_img_id = await query_stock()
-    await send_and_cache(stock_summary, updown_bar, price_img, price_img_id, client, chat_id)
+    stock_summary, updown_bar, price_img = await query_stock()
+    await send_stock(stock_summary, updown_bar, price_img, client, chat_id)
     remind_text = '🔊 '
-    remind_text += ' '.join(f'@{user.mention()}' for user in users)
+    remind_text += ' '.join(mention_id(uid, name) for uid, name in users.items())
     remind_text += '\n\n还有5分钟就收盘了，记得看盘调仓！'
     remind_text += '\n\n/remind_stock 添加提醒'
     return await client.send_message(chat_id, remind_text)
 
 
 async def remind_stock_all() -> None:
-    trading = is_trading_time()
-    if not trading:
+    if not is_trading_time():
         return None
-    tasks = []
-    for chat_id in stock_reminder.data.keys():
-        tasks.append(remind_stock(bot, chat_id))
+    tasks = [remind_stock(bot, chat_id) for chat_id in stock_reminder.data]
     await asyncio.gather(*tasks)

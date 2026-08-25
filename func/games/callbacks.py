@@ -1,159 +1,137 @@
+import logging
 from typing import Optional
-from pyrogram import Client
 from share.auth import ensure_auth
 from share.common import no_preview
-from games.balance import user_balance
-from pyrogram.types import CallbackQuery
+from games.balance import money, user_balance
 from func.games.betting import betting_state
-from func.games.baccarat import format_betting_status
+from func.games.blackjack import handle_action
+from func.games.baccarat import BET_NAMES, MAX_BET, MIN_BET, betting_buttons, render_betting
 
 
-# Store temporary bet selections: {user_id: {'bet_type': str, 'amount': int}}
-temp_bets = {}
+async def refresh(event, chat_id: int):
+    """Redraw the betting message from the table, not from its own text."""
+    state = betting_state.get(chat_id)
+    if not state:
+        return
+    try:
+        await event.edit(
+            await render_betting(state, event.client),
+            buttons=betting_buttons(chat_id),
+            **no_preview
+        )
+    except Exception as e:
+        logging.debug(f'[games]\tCould not refresh betting message: {e}')
 
 
 @ensure_auth
-async def handle_baccarat_callback(client: Client, callback: CallbackQuery) -> Optional[CallbackQuery]:
-    """Handle baccarat betting callbacks"""
-    if not callback.data or not callback.from_user:
+async def handle_baccarat_callback(event) -> Optional[object]:
+    """`bac:<chat id>:<action>:<value>`"""
+    if not event.data or not event.sender_id:
         return None
-    
-    user_id = callback.from_user.id
-    data_parts = callback.data.split('_')
-    
-    if len(data_parts) < 3:
+
+    try:
+        _, chat_id, action, value = event.data.decode().split(':', 3)
+        chat_id = int(chat_id)
+    except ValueError:
         return None
-    
-    action = data_parts[0]
-    chat_id = int(data_parts[1])
-    
-    # Check if betting is still open
+
+    user_id = event.sender_id
     if not betting_state.is_betting_open(chat_id):
-        return await callback.answer('下注时间已结束！', show_alert=True)
+        return await event.answer('下注时间已结束！', alert=True)
 
-    # Handle bet type selection
-    if action == 'bet' and len(data_parts) == 3:
-        bet_type = data_parts[2]  # 'player', 'banker', or 'tie'
-        
-        if user_id not in temp_bets:
-            temp_bets[user_id] = {}
-        temp_bets[user_id]['bet_type'] = bet_type
-        
-        bet_type_name = {'player': '闲家', 'banker': '庄家', 'tie': '和局'}[bet_type]
-        return await callback.answer(f'已选择：{bet_type_name}', show_alert=False)
+    # only the three actions that build a bet open a slot for one --
+    # `no` has to be able to tell "nothing selected" from "selected
+    # nothing", and creating the slot here would erase the difference
+    pick = None
+    if action in ('type', 'amt', 'ok'):
+        pick = betting_state.pick(chat_id, user_id)
+        if pick is None:
+            return await event.answer('下注时间已结束！', alert=True)
 
-    # Handle amount selection
-    elif action == 'amount' and len(data_parts) == 3:
-        amount_str = data_parts[2]
-        
-        if user_id not in temp_bets:
-            temp_bets[user_id] = {'amount': 0}
-        elif 'amount' not in temp_bets[user_id]:
-            temp_bets[user_id]['amount'] = 0
-        
-        current_balance = user_balance.get_balance(user_id)
-        current_amount = temp_bets[user_id]['amount']
-        
-        if amount_str == 'all':
-            # Set to all available balance
-            temp_bets[user_id]['amount'] = current_balance
-            return await callback.answer(f'已选择全部余额：{current_balance}', show_alert=False)
-        else:
-            # Accumulate amount
-            add_amount = int(amount_str)
-            new_amount = current_amount + add_amount
-            
-            # Don't exceed balance
-            if new_amount > current_balance:
-                temp_bets[user_id]['amount'] = current_balance
-                return await callback.answer(f'已达到最大余额：{current_balance}', show_alert=False)
-            else:
-                temp_bets[user_id]['amount'] = new_amount
-                return await callback.answer(f'已选择金额：{new_amount} (+{add_amount})', show_alert=False)
-
-    # Handle bet cancellation
-    elif action == 'cancel':
-        # not complete
-        if user_id in temp_bets:
-            del temp_bets[user_id]
-            return await callback.answer('已取消下注', show_alert=False)
-
-        # complete
-        refund = betting_state.undo_bet(chat_id, user_id)
-        if refund > 0:
-            user_balance.add_balance(user_id, refund)
-            return await callback.answer(f'已取消下注，返还金额：{refund}', show_alert=False)
-
-        return await callback.answer('未下注！', show_alert=False)
-    
-    # Handle bet confirmation
-    elif action == 'confirm':
-        if user_id not in temp_bets:
-            return await callback.answer('请先选择下注类型和金额！', show_alert=True)
-
-        bet_info = temp_bets[user_id]
-        if 'bet_type' not in bet_info or 'amount' not in bet_info or bet_info.get('amount', 0) <= 0:
-            await callback.answer('请先选择下注类型和金额！', show_alert=True)
+    if action == 'type':
+        if value not in BET_NAMES:
             return None
+        pick.bet_type = value
+        return await event.answer(f'已选择：{BET_NAMES[value]}')
 
-        bet_type = bet_info['bet_type']
-        amount = bet_info['amount']
-        
-        # Check balance
-        current_balance = user_balance.get_balance(user_id)
-        if current_balance < amount:
-            return await callback.answer(f'余额不足！当前余额：{current_balance}', show_alert=True)
+    if action == 'amt':
+        balance = user_balance.get_balance(user_id)
+        ceiling = min(balance, MAX_BET)
 
-        # Place bet
-        success = betting_state.place_bet(chat_id, user_id, bet_type, amount)
-        if success:
-            # Deduct balance immediately
-            user_balance.subtract_balance(user_id, amount)
-            bet_type_name = {'player': '闲家', 'banker': '庄家', 'tie': '和局'}[bet_type]
-            new_balance = user_balance.get_balance(user_id)
-            await callback.answer(
-                f'下注成功！{bet_type_name} {amount} (余额: {new_balance})', 
-                show_alert=True
-            )
-            # Clear temp bet
-            if user_id in temp_bets:
-                del temp_bets[user_id]
-            
-            # Update message to show new bet
-            try:
-                message = callback.message
-                if message and message.text:
-                    # Get current text and update betting status
-                    current_text = message.text
-                    # Find the betting status section and update it
-                    lines = current_text.split('\n')
-                    updated_lines = []
-                    in_betting_section = False
-                    for line in lines:
-                        if '当前下注情况' in line:
-                            in_betting_section = True
-                            updated_lines.append(line)
-                            # Add updated betting status
-                            status_text = await format_betting_status(chat_id, client)
-                            updated_lines.append(status_text)
-                        elif in_betting_section and line.startswith('•'):
-                            continue  # Skip old betting lines
-                        elif '暂无下注' in line:
-                            continue  # Skip this
-                        elif in_betting_section and not line.startswith('•') and line.strip():
-                            in_betting_section = False
-                            updated_lines.append(line)
-                        else:
-                            updated_lines.append(line)
-                    
-                    updated_text = '\n'.join(updated_lines)
-                    await message.edit_text(
-                        updated_text,
-                        reply_markup=message.reply_markup,
-                        **no_preview
-                    )
-            except Exception:
-                # If update fails, just continue
-                pass
-        else:
-            return await callback.answer('下注失败，请重试！', show_alert=True)
+        if value == 'all':
+            pick.amount = int(ceiling)
+            return await event.answer(f'梭哈：{money(pick.amount)}')
+
+        try:
+            step = int(value)
+        except ValueError:
+            return None
+        wanted = pick.amount + step
+        pick.amount = int(min(wanted, ceiling))
+        if wanted > ceiling:
+            return await event.answer(f'最多只能下 {money(pick.amount)}')
+        return await event.answer(f'当前金额：{money(pick.amount)}（+{step}）')
+
+    if action == 'no':
+        # a selection that was never confirmed, first
+        if betting_state.drop_pick(chat_id, user_id):
+            return await event.answer('已取消选择')
+
+        refund = betting_state.undo_bet(chat_id, user_id)
+        if refund:
+            user_balance.add_balance(user_id, refund)
+            await event.answer(f'已撤回下注，退还 {money(refund)}')
+            return await refresh(event, chat_id)
+        return await event.answer('你还没有下注！')
+
+    if action == 'ok':
+        if not pick.bet_type or pick.amount <= 0:
+            return await event.answer('请先选择下注类型和金额！', alert=True)
+        if pick.amount < MIN_BET:
+            return await event.answer(f'最少下注 {money(MIN_BET)}。', alert=True)
+
+        # a change of mind gives the old stake back before taking the new one
+        previous = betting_state.place_bet(chat_id, user_id, pick.bet_type, pick.amount)
+        if previous is None:
+            return await event.answer('下注时间已结束！', alert=True)
+        if previous:
+            user_balance.add_balance(user_id, previous)
+
+        if not user_balance.subtract_balance(user_id, pick.amount):
+            betting_state.undo_bet(chat_id, user_id)
+            return await event.answer(
+                f'余额不足！当前余额：{money(user_balance.get_balance(user_id))}', alert=True)
+
+        betting_state.drop_pick(chat_id, user_id)
+        await event.answer(
+            f'下注成功！{BET_NAMES[pick.bet_type]} {money(pick.amount)}'
+            f'（余额 {money(user_balance.get_balance(user_id))}）',
+            alert=True
+        )
+        return await refresh(event, chat_id)
+
+    if action == 'go':
+        state = betting_state.get(chat_id)
+        if not state:
+            return None
+        if user_id != state.opener:
+            return await event.answer('只有开局的人可以提前开牌。')
+        if not state.bets:
+            return await event.answer('还没有人下注呢。')
+        state.start_now = True
+        return await event.answer('这就开牌！')
+
+    return None
+
+
+@ensure_auth
+async def handle_blackjack_callback(event) -> Optional[object]:
+    """`bj:<hand id>:<action>`"""
+    if not event.data or not event.sender_id:
+        return None
+    try:
+        _, hand_id, action = event.data.decode().split(':', 2)
+        hand_id = int(hand_id)
+    except ValueError:
+        return None
+    return await handle_action(event, hand_id, action)

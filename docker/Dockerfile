@@ -1,17 +1,12 @@
-FROM kumatea/bot:latest
+FROM kumatea/telethon:latest
 
-ENV CONDA_PKGS="aiohttp apscheduler beautifulsoup4 pillow pyrogram uvloop"
-ENV PIP_PKGS="telethon chinesecalendar tgcrypto"
+ENV PIP_PKGS="aiohttp apscheduler<3.11 beautifulsoup4 chinesecalendar pillow requests tqdm"
 
-# Create conda environment
+# Install packages
 RUN set -ex && \
-    eval "$(/opt/conda/bin/conda shell.bash hook)" && \
-    conda create -n jd $CONDA_PKGS -y && \
-    conda clean -afy && \
-    conda activate jd && \
-    pip install $PIP_PKGS --prefer-binary --extra-index-url https://ext.kmtea.eu/cdn && \
-    rm -rf /root/.cache/*
+    pip install $PIP_PKGS --prefer-binary --no-cache-dir --extra-index-url https://ext.kmtea.eu/cdn && \
+    (rm -rf /root/.cache || echo "No cache in .cache")
 
 
 # Set entrypoint
-ENTRYPOINT ["/bin/bash", "/home/kuma/bots/jd/docker/run-docker.sh"]
+ENTRYPOINT ["/bin/sh", "/home/kuma/bots/jd/docker/run-docker.sh"]

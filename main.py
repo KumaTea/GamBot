@@ -1,15 +1,23 @@
 import os
+import asyncio
 
 if os.name != 'nt':
-    import uvloop
-    uvloop.install()
+    try:
+        import uvloop
+        uvloop.install()
+    except ImportError:
+        # a nicety, not a requirement
+        pass
 
-from bot.session import bot
 from bot.starting import starting
+from bot.session import bot, BOT_TOKEN
 
 
-starting()
+async def main():
+    await bot.start(bot_token=BOT_TOKEN)
+    starting()
+    await bot.run_until_disconnected()
 
 
 if __name__ == '__main__':
-    bot.run()
+    asyncio.run(main())

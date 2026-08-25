@@ -1,7 +1,19 @@
 import os
 import logging
-from common.data import STOCK_DATA_DIR, USER_PHOTO_DIR
 from handlers.register import add_jobs, register_handlers
+from collect.store import COLLECT_BLOB_DIR, COLLECT_DATA_DIR
+from common.data import STOCK_DATA_DIR
+from bot.media_cache import MEDIA_DATA_DIR
+from games.balance import BALANCE_DATA_DIR
+
+
+DATA_DIRS = [
+    STOCK_DATA_DIR,
+    BALANCE_DATA_DIR,
+    COLLECT_DATA_DIR,
+    COLLECT_BLOB_DIR,
+    MEDIA_DATA_DIR,
+]
 
 
 def mkdir_p(paths: list):
@@ -10,7 +22,7 @@ def mkdir_p(paths: list):
 
 
 def starting():
-    mkdir_p([USER_PHOTO_DIR, STOCK_DATA_DIR])
+    mkdir_p(DATA_DIRS)
     register_handlers()
     add_jobs()
 
