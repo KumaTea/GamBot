@@ -76,15 +76,34 @@ Anyone can ask for one:
 Only the accounts in `collect.config.ARCHIVISTS` can put one in. Any of
 these files the picture:
 
-- reply `/ruby` to a message with a picture in it
+- reply `/ruby` to a message with a picture or a link in it
 - send a picture captioned `ruby`
 - reply `ruby` to a message with a picture in it
-- say `ruby` right after a picture went past (yours or anyone's)
-- send or forward a picture, or a direct image link, to the bot in private
+- say `ruby` just after posting one yourself
+- send or forward a picture, or a link, to the bot in private
+
+`ruby`, `Ruby` and `路比` all count as the keyword.
 
 `/ruby` only files when an archivist aims it at a picture. Pointed at
 anything else — no reply, a reply to plain text, or anyone else asking —
 it hands a picture out as usual.
+
+A bare keyword looks back over your own last `RECENT_KEEP` messages in
+that chat and takes the newest with a picture or a link in it. Your own:
+another bot talking in between costs you nothing, because everybody is
+remembered separately, and nobody else's message can be what your
+keyword meant. Nothing is fetched to do this — the messages are still in
+hand from when they went past.
+
+It says nothing when it finds nothing, and nothing when what it finds
+turns out to be unfilable or already filed. `ruby` is a word before it
+is an instruction, and a sentence that happens to contain one should not
+be answered with a complaint. Aim `/ruby` at the thing instead, or send
+it to the bot in private, and the same answers get made out loud.
+
+A link handed over this way is answered with 交给取图的账号了 — which
+takes itself back after five minutes, since the picture it promises
+reports itself when it lands.
 
 **Page links go through a second account** — an X post, say. Telegram
 hands bots `webPageEmpty` for those, and the methods that would resolve

@@ -23,7 +23,7 @@ COLLECTIONS: dict[str, Collection] = {
     'ruby': Collection(
         name='ruby',
         label='Ruby',
-        keywords=('ruby',),
+        keywords=('ruby', '路比'),
         commands=('ruby',),
         empty_text='Ruby 的相册还是空的。',
     ),
@@ -51,8 +51,11 @@ DEFAULT_COLLECTION = 'ruby'
 
 # How far back a bare keyword ("ruby and me") will look for the picture
 # it refers to, when the message does not quote one itself.
-RECENT_MEDIA_KEEP = 8          # messages remembered per chat
-RECENT_MEDIA_TTL = 60 * 60     # seconds one stays worth filing
+#
+# Counted in messages from the same person: another bot talking in
+# between uses none of it up, because everybody is remembered apart.
+RECENT_KEEP = 3                # messages remembered per person, per chat
+RECENT_TTL = 60 * 60           # seconds one stays worth filing
 
 
 def collection_of_keyword(text: str) -> list[Collection]:
