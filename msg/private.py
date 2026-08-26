@@ -2,7 +2,8 @@ from typing import Optional
 from bot.media import message_image, pack_file_id
 from telethon.tl.custom import Message
 from common.info import administrators
-from func.collect.main import archive_private
+from collect.config import PREVIEW_ACCOUNT
+from func.collect.main import archive_preview, archive_private
 
 
 async def private_message(event) -> Optional[Message]:
@@ -13,6 +14,13 @@ async def private_message(event) -> Optional[Message]:
     anything else an admin sends a picture for gets its file id read
     back, which is handy when setting up static stickers and the like.
     """
+    # The preview account is not somebody filing a picture -- it is
+    # answering a link the bot asked it about, and its answer is the
+    # picture. Taken first, or the branch below would read it a file id
+    # back instead, which it has no use for.
+    if event.sender_id == PREVIEW_ACCOUNT:
+        return await archive_preview(event)
+
     if event.sender_id not in administrators:
         return None
 

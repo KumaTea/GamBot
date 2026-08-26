@@ -9,10 +9,9 @@ from collect.main import (
     archive_message, first_link, looks_like_image_url,
     recent_media, refetch, send_item
 )
-from collect.config import ARCHIVISTS, COLLECTIONS, Collection, collection_of_keyword
-
-
-DEFAULT_COLLECTION = 'ruby'
+from collect.config import (
+    ARCHIVISTS, COLLECTIONS, Collection, DEFAULT_COLLECTION, collection_of_keyword
+)
 
 
 def may_archive(user_id: int) -> bool:
@@ -135,6 +134,27 @@ async def archive_private(event) -> Optional[Message]:
         if report:
             lines.append(report)
     return await event.reply('\n'.join(lines)) if lines else None
+
+
+async def archive_preview(event) -> Optional[Message]:
+    """
+    File a picture the preview account sent back.
+
+    `hand_to_preview` gave that account a link and stopped; this is the
+    far end of it. The picture turns up on its own some seconds later
+    and is filed then, so nothing had to be kept waiting -- which is
+    also why there is no request here to match it against.
+
+    That is what pins it to one collection: the picture answers a link,
+    not a `/ruby`, and a link says nothing about which pile it was meant
+    for. Adding a second pile would mean saying so in the message.
+    """
+    if message_image(event.message) is None:
+        return None
+
+    collection = COLLECTIONS[DEFAULT_COLLECTION]
+    report = await archive_message(collection, event.message, added_by=event.sender_id)
+    return await event.reply(report) if report else None
 
 
 def make_command(collection: Collection):

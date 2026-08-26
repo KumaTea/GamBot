@@ -1,3 +1,4 @@
+from typing import Optional
 from dataclasses import dataclass
 from common.info import creator
 
@@ -31,6 +32,22 @@ COLLECTIONS: dict[str, Collection] = {
 
 # Anyone may ask for a picture; only these accounts may put one in.
 ARCHIVISTS: set[int] = {creator}
+
+# The account that can see what is behind a page link.
+#
+# Telegram renders link previews for people and not for bots: a bot is
+# handed `webPageEmpty` for every page link, and both of the methods
+# that would resolve one -- `messages.getWebPagePreview` and
+# `messages.getWebPage` -- answer it BOT_METHOD_INVALID. So a page link
+# goes to a user account running `preview.py`, which sends the picture
+# back as an ordinary message. None when nothing is running there, in
+# which case page links are simply not filable, the way they were before.
+PREVIEW_ACCOUNT: Optional[int] = 345060487
+
+# Which pile a picture belongs to when nothing says otherwise -- notably
+# one that comes back from the preview account, which answers a link
+# rather than a request and so has no collection attached to it.
+DEFAULT_COLLECTION = 'ruby'
 
 # How far back a bare keyword ("ruby and me") will look for the picture
 # it refers to, when the message does not quote one itself.

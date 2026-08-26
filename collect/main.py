@@ -10,7 +10,9 @@ from bot.media import (
     to_upload, upload_quietly, webpage_url
 )
 from collect.store import Item, collect_store
-from collect.config import Collection, RECENT_MEDIA_KEEP, RECENT_MEDIA_TTL
+from collect.config import (
+    Collection, PREVIEW_ACCOUNT, RECENT_MEDIA_KEEP, RECENT_MEDIA_TTL
+)
 
 
 class RecentMedia:
@@ -139,11 +141,10 @@ async def archive_url(
     content = await download_image(url)
     if not content:
         # Either the host refused us, or -- far more often -- the link is
-        # a page rather than a picture. A bot cannot ask Telegram to
-        # render a preview (`messages.getWebPagePreview` is
-        # BOT_METHOD_INVALID), so a page link is a dead end: forward the
-        # picture itself instead.
-        return f'{collection.label}：这个链接里没有能直接取到的图片，把图转发过来吧。'
+        # a page rather than a picture. A bot cannot ask Telegram what is
+        # on a page (`messages.getWebPagePreview` is BOT_METHOD_INVALID),
+        # so somebody who can has to go and look.
+        return await hand_to_preview(collection, url, client)
 
     ref = await upload_quietly(client, content)
     item_id = collect_store.add(
@@ -156,6 +157,28 @@ async def archive_url(
     if item_id is None:
         return f'{collection.label}：这张已经存过了。'
     return f'{collection.label} +1（共 {collect_store.count(collection.name)} 张）'
+
+
+async def hand_to_preview(collection: Collection, url: str, client) -> str:
+    """
+    Ask the preview account what the picture behind a page link is.
+
+    Nothing is waited for. The account answers with a picture of its
+    own accord -- a second or two later, once Telegram has fetched the
+    page -- and that arrives as an ordinary message, which files itself
+    when it does. So there is no request to hold open, nothing to time
+    out, and nothing to remember in between.
+    """
+    stuck = f'{collection.label}：这个链接里没有能直接取到的图片，把图转发过来吧。'
+    if not PREVIEW_ACCOUNT:
+        return stuck
+
+    try:
+        await client.send_message(PREVIEW_ACCOUNT, url)
+    except Exception as e:
+        logging.warning(f'[collect]\tCould not reach the preview account: {e}')
+        return stuck
+    return f'{collection.label}：链接交给取图的账号了，取到就存。'
 
 
 # -- handing back out

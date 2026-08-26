@@ -86,14 +86,23 @@ these files the picture:
 anything else — no reply, a reply to plain text, or anyone else asking —
 it hands a picture out as usual.
 
-**Page links cannot be filed** — an X post, say. Telegram hands bots
-`webPageEmpty` for those and the methods that would resolve the preview
-(`messages.getWebPagePreview`, `messages.getWebPage`) are both
-`BOT_METHOD_INVALID`, for every URL, so there is nothing behind the link
-a bot can reach. Forward the picture instead. Links that point straight
-at an image file do work: the bot fetches it and hands it to Telegram
-without sending it to anybody, so it still ends up with something
-reusable.
+**Page links go through a second account** — an X post, say. Telegram
+hands bots `webPageEmpty` for those, and the methods that would resolve
+the preview (`messages.getWebPagePreview`, `messages.getWebPage`) are
+both `BOT_METHOD_INVALID`, for every URL, so there is nothing behind
+such a link a bot can reach on its own. A user account can see the
+preview perfectly well, so one runs `preview.py` and does the looking:
+the bot sends it the link and carries on, and the picture arrives a
+moment later as an ordinary message, which is filed when it turns up.
+Nothing is held open in between, so nothing can time out — and equally,
+a link with no picture behind it is answered with silence.
+
+Set `collect.config.PREVIEW_ACCOUNT` to `None` to turn that off; page
+links are then a dead end again, and forwarding the picture is the way.
+
+Links that point straight at an image file never needed any of it: the
+bot fetches those itself and hands them to Telegram without sending
+them to anybody, so it still ends up with something reusable.
 
 **The keyword only works if the bot can see ordinary messages.** Turn
 group privacy off in @BotFather (`/setprivacy` → Disable); with it on,
@@ -125,6 +134,37 @@ Or in Docker, on `kumatea/telethon`:
 ```shell
 docker build -t gambot -f docker/Dockerfile .
 ```
+
+### The preview account
+
+`preview.py` is a second process and a second Telegram account, whose
+whole job is described under 存图 above: it is sent a link and it sends
+the picture back. It answers nothing else, and shares no state with the
+bot — no `data/`, no database — so it can be started, stopped and
+restarted on its own.
+
+It reads the same `config.ini`, taking `[preview]` if that section is
+there and falling back to `[jd]` for the api credentials, which a user
+session may share with the bot:
+
+```ini
+[preview]
+api_id = ...
+api_hash = ...
+session = preview
+bot_id = 6145808069
+```
+
+The first run asks for that account's phone number and login code, so
+it has to be run by hand once before it can be run unattended:
+
+```shell
+python preview.py
+```
+
+The account has to have started the bot at least once, or the bot has
+no way to open the chat. `collect.config.PREVIEW_ACCOUNT` is the id the
+bot expects to hear back from.
 
 ## Layout
 
