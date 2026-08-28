@@ -4,7 +4,7 @@ from telethon import Button
 from bot.session import urandom
 from common.data import BACCARAT_RULE
 from telethon.tl.custom import Message
-from games.balance import money, user_balance
+from games.balance import money, settle_bet, signed
 from games.cards.card import generate_deck
 from func.games.betting import Table, betting_state
 from func.games.wallet import bettor_name
@@ -26,7 +26,6 @@ MIN_BET = 10
 MAX_BET = 1000000
 SHOE_DECKS = 8
 SHOE_LOW_WATER = 20          # a hand can want six cards; reshuffle well before that
-CLEANUP_AFTER = 10 * 60      # when the transcript is folded back up
 
 CHIPS = [100, 500, 1000, 5000]
 
@@ -188,34 +187,13 @@ async def settle(state: Table, client, result: str) -> str:
     for user_id, bet in state.bets.items():
         name = await bettor_name(client, user_id)
         bet_name = BET_NAMES[bet.bet_type]
-        if bet.bet_type == result:
-            winnings = int(bet.amount * PAYOUT[result])
-            balance = user_balance.add_balance(user_id, winnings)
-            profit = winnings - bet.amount
-            lines.append(
-                f'✓ {name}：{bet_name} {money(bet.amount)} → +{money(profit)}'
-                f'（余额 {money(balance)}）')
-        else:
-            balance = user_balance.get_balance(user_id)
-            lines.append(
-                f'✗ {name}：{bet_name} {money(bet.amount)} → -{money(bet.amount)}'
-                f'（余额 {money(balance)}）')
+        won = bet.bet_type == result
+        returned = int(bet.amount * PAYOUT[result]) if won else 0
+        balance, profit = settle_bet(user_id, bet.amount, returned)
+        lines.append(
+            f'{"✓" if won else "✗"} {name}：{bet_name} {money(bet.amount)} → '
+            f'{signed(profit)}（余额 {money(balance)}）')
     return '\n'.join(lines) + '\n'
-
-
-def fold_up_later(reply: Message, summary: str):
-    """
-    Replace the play-by-play with a one-line summary, later.
-
-    The transcript is the fun part while it is happening and clutter
-    half an hour afterwards -- but the handler must not sit here for ten
-    minutes holding the chat's table, so this goes off on its own.
-    """
-    async def cleanup():
-        await asyncio.sleep(CLEANUP_AFTER)
-        await edit_text(reply, summary)
-
-    asyncio.create_task(cleanup())
 
 
 async def start_baccarat(event) -> Optional[Message]:
@@ -262,8 +240,6 @@ async def start_baccarat(event) -> Optional[Message]:
         finally:
             betting_state.clear_game(chat_id)
 
-    summary = f'{GAME_NAME} /baccarat\n{headline}\n'
-    if settlement:
-        summary += '\n' + settlement
-    fold_up_later(reply, summary)
+    # the transcript is taken back with everything else a game says --
+    # `@transient` on the command does that, five minutes from here
     return reply

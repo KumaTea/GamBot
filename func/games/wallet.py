@@ -1,13 +1,17 @@
 import logging
 from typing import Optional, Tuple
 from share.auth import ensure_auth
+from func.fading import transient
 from telethon.tl.custom import Message
 from share.common import get_user_name, mention_id
-from games.balance import MINIMUM_BALANCE, WELFARE_AMOUNT, check_in, money, user_balance
+from games.balance import (
+    MINIMUM_BALANCE, WELFARE_AMOUNT, check_in, money,
+    profit_and_loss, signed, user_balance
+)
 
 
 ALL_IN_WORDS = {'all', 'allin', 'all-in', '梭哈', '全部', '全押', '梭'}
-DEFAULT_STAKE = 100
+DEFAULT_STAKE = 1000
 
 
 def parse_stake(word: str, balance: float, minimum: int, maximum: int) -> Tuple[int, str]:
@@ -18,10 +22,16 @@ def parse_stake(word: str, balance: float, minimum: int, maximum: int) -> Tuple[
     usable and should be shown to the player instead of a game.
     """
     word = (word or '').strip().lower()
+    all_in = False
     if not word:
-        amount = min(DEFAULT_STAKE, balance)
+        # the default is a round thousand, or everything when a
+        # thousand is more than there is: with 300 in hand `/slots`
+        # means the 300, which is what somebody typing it meant
+        amount = min(DEFAULT_STAKE, balance, maximum)
+        all_in = amount >= balance
     elif word in ALL_IN_WORDS:
         amount = min(balance, maximum)
+        all_in = amount >= balance
     else:
         try:
             amount = float(word)
@@ -29,7 +39,12 @@ def parse_stake(word: str, balance: float, minimum: int, maximum: int) -> Tuple[
             return 0, f'看不懂「{word}」是多少钱。'
 
     amount = int(amount)
-    if amount < minimum:
+    if amount <= 0:
+        # nothing left is a different problem from asking to bet nothing
+        return 0, ('你已经没钱了，/checkin 领点零花再来。' if all_in
+                   else '下注金额得是正数。')
+    # somebody pushing in everything they have is not betting too little
+    if amount < minimum and not all_in:
         return 0, f'最少下注 {money(minimum)}。'
     if amount > maximum:
         return 0, f'最多下注 {money(maximum)}。'
@@ -76,6 +91,7 @@ async def command_balance(event) -> Message:
     rank = user_balance.rank_of(user.id)
     return await event.respond(
         f'{get_user_name(user)} 的余额：**{money(balance)}**\n'
+        f'赌场盈亏：**{signed(profit_and_loss.get(user.id))}**\n'
         f'排名：第 {rank} / {len(user_balance.balances)} 位'
     )
 
@@ -91,11 +107,16 @@ async def command_rank(event) -> Message:
     for place, (user_id, balance) in enumerate(top, start=1):
         marker = medals.get(place, f'{place}.')
         name = await bettor_name(event.client, user_id)
-        lines.append(f'{marker} {name} — {money(balance)}')
+        lines.append(f'{marker} {name} — {money(balance)}'
+                     f'（盈亏 {signed(profit_and_loss.get(user_id))}）')
+    # the bank's own column: the same number as everybody else's
+    # together, the other way round
+    lines += ['', f'庄家盈亏：**{signed(profit_and_loss.house)}**']
     return await event.respond('\n'.join(lines))
 
 
 @ensure_auth
+@transient
 async def command_checkin(event) -> Message:
     user_id = event.sender_id
     claimed, streak, amount = check_in.claim(user_id)
@@ -113,7 +134,13 @@ async def command_checkin(event) -> Message:
 
 @ensure_auth
 async def command_give(event) -> Message:
-    """Transfer money: reply to someone with /give 500, or /give <id> 500."""
+    """
+    Transfer money: reply to someone with /give 500, or /give <id> 500.
+
+    A transfer moves money without anybody having won it, so it stays
+    out of the profit column at both ends -- it goes through the plain
+    balance rather than through `settle_bet`.
+    """
     args = (event.raw_text or '').split()[1:]
     sender = event.sender_id
     usage = '用法：回复某人 /give 500，或 /give <用户 id> 500'

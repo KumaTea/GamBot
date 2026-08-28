@@ -1,5 +1,6 @@
 import random
 from share.auth import ensure_auth
+from func.fading import transient
 from telethon.tl.custom import Message
 from share.common import get_command_args
 from func.gacha.genshin import gacha_genshin
@@ -14,6 +15,7 @@ POOLS = {
 
 
 @ensure_auth
+@transient
 async def command_gacha(event) -> Message:
     """`/gacha` for whichever pool comes up, `/gacha ys` for a named one."""
     args = get_command_args(event.raw_text)
@@ -31,10 +33,12 @@ async def command_gacha(event) -> Message:
 
 
 @ensure_auth
+@transient
 async def command_gacha_genshin(event) -> Message:
     return await gacha_genshin(event)
 
 
 @ensure_auth
+@transient
 async def command_gacha_arknights(event) -> Message:
     return await gacha_arknights(event)

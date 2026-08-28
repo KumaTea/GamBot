@@ -6,8 +6,10 @@ from telethon import Button
 from dataclasses import dataclass, field
 from telethon.tl.custom import Message
 from share.auth import ensure_auth
+from func.games.turns import in_turn
+from func.fading import transient
 from func.games.share import edit_text
-from games.balance import money, user_balance
+from games.balance import money, settle_bet, signed, user_balance
 from func.games.wallet import bettor_name, take_stake
 from games.cards.blackjack import (
     BlackjackDeck, gen_blackjack_deck, hand_value,
@@ -35,6 +37,9 @@ class Hand:
     doubled: bool = False
     over: bool = False
     watchdog: Optional[asyncio.Task] = None
+    # set the moment the hand is settled, however it ended -- what the
+    # command waits on so a player's next hand does not start on top
+    done: asyncio.Event = field(default_factory=asyncio.Event)
 
 
 hands: Dict[int, Hand] = {}
@@ -77,14 +82,13 @@ def finish(hand: Hand) -> str:
     """Pay the hand out and describe what happened."""
     verdict, rate = settle(hand.player, hand.dealer)
     returned = int(hand.stake * rate)
-    balance = user_balance.add_balance(hand.user_id, returned) if returned else \
-        user_balance.get_balance(hand.user_id)
-    profit = returned - hand.stake
+    # `hand.stake` is already the doubled figure where it was doubled,
+    # and both halves of it have been taken, so this is the whole wager
+    balance, profit = settle_bet(hand.user_id, hand.stake, returned)
 
-    sign = '+' if profit > 0 else ''
     return (
         f'\n**{verdict}**\n'
-        f'{sign}{money(profit)}（余额 {money(balance)}）\n'
+        f'{signed(profit)}（余额 {money(balance)}）\n'
         f'\n/blackjack 再来一局！'
     )
 
@@ -99,7 +103,9 @@ async def play_dealer(message: Message, hand: Hand) -> Message:
         message = await edit_text(message, render(hand, hide_dealer=False))
         await asyncio.sleep(DEAL_PAUSE)
 
-    return await edit_text(message, render(hand, hide_dealer=False, tail=finish(hand)))
+    message = await edit_text(message, render(hand, hide_dealer=False, tail=finish(hand)))
+    hand.done.set()
+    return message
 
 
 def close(hand_id: int):
@@ -128,6 +134,8 @@ def watch(hand_id: int, message: Message, hand: Hand):
 
 
 @ensure_auth
+@transient
+@in_turn
 async def command_blackjack(event) -> Optional[Message]:
     args = (event.raw_text or '').split()[1:]
     stake, complaint = await take_stake(event, args[0] if args else '', MIN_BET, MAX_BET)
@@ -156,6 +164,15 @@ async def command_blackjack(event) -> Optional[Message]:
     hands[hand_id] = hand
     message = await event.respond(render(hand), buttons=action_buttons(hand_id, hand))
     watch(hand_id, message, hand)
+
+    # the seat is held until the hand is actually over, buttons and all.
+    # The watchdog above guarantees that happens; the wait is bounded
+    # anyway, because a seat held by a hand that somehow never ended
+    # would lock the player out of the casino for good.
+    try:
+        await asyncio.wait_for(hand.done.wait(), ABANDON_AFTER + 60)
+    except asyncio.TimeoutError:
+        logging.warning(f'[games]\tBlackjack hand {hand_id} never settled')
     return message
 
 
@@ -184,6 +201,7 @@ async def handle_action(event, hand_id: int, action: str) -> None:
         close(hand_id)
         if is_bust(hand.player):
             await edit_text(message, render(hand, hide_dealer=False, tail=finish(hand)), None)
+            hand.done.set()
         else:
             await play_dealer(message, hand)
         return None
@@ -196,6 +214,7 @@ async def handle_action(event, hand_id: int, action: str) -> None:
             hand.over = True
             close(hand_id)
             await edit_text(message, render(hand, hide_dealer=False, tail=finish(hand)), None)
+            hand.done.set()
         else:
             await edit_text(message, render(hand), action_buttons(hand_id, hand))
         return None

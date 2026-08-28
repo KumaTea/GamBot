@@ -15,18 +15,43 @@ couple of gacha pools, and a picture collection. Built on Telethon.
 | `/dice` `/骰宝` | 骰宝 — `/dice 大 500`, 豹子 pays 30:1 |
 | `/games` `/赌场` | the list above, in the chat |
 
+A command with no amount on it bets 1000, or everything there is when
+that is less than 1000 — a player with 300 left means the 300, and the
+table minimum does not stand in the way of somebody's last chips.
+
+**One game at a time, per player.** Four `/blackjack` in a row are four
+games: they queue up and are played in order, each reading a balance the
+one before it has finished writing. Asking for a fifth while four are in
+flight gets a shrug rather than a place in the queue. Baccarat is not
+queued — the whole group plays one hand together, and a chat already
+holds a single table of its own.
+
+**A finished game clears itself up after five minutes**, along with the
+command that asked for it where the bot is allowed to delete other
+people's messages. Whether it is allowed is asked once per chat and
+remembered; a chat that says no is never asked again. Nothing is lost
+with the message — the balance and the profit column are what a game
+leaves behind.
+
 ### 钱
 
 Everything shares one balance, games and stock account alike.
 
 | Command | What it does |
 | --- | --- |
-| `/balance` `/余额` | balance and leaderboard position |
-| `/checkin` `/签到` | daily allowance, more for a streak |
-| `/rank` `/富豪榜` | top ten |
+| `/balance` `/余额` | balance, profit and loss, leaderboard position |
+| `/checkin` `/签到` | daily allowance, more for a streak — fades like a game |
+| `/rank` `/富豪榜` | top ten, and what the house is up |
 | `/give` `/转账` | reply to someone with `/give 500` |
 
 Anyone below the minimum balance is topped up at midnight.
+
+**Profit and loss is what was won and lost at the tables**, which is not
+the same as what somebody has. An allowance, a midnight top-up, a
+transfer or a stock trade all move the balance without anybody having
+won anything, so none of them go in the column: only a settled wager
+does. The bank keeps a seat of its own holding the mirror image, so
+every player's profit together with the house's comes to nothing.
 
 ### 股票
 
@@ -46,7 +71,8 @@ them.
 
 ### 抽卡
 
-`/gacha`, or `/gacha_ys` for 原神 and `/gacha_ak` for 明日方舟.
+`/gacha`, or `/gacha_ys` for 原神 and `/gacha_ak` for 明日方舟. A pull
+clears itself up after five minutes, the same as a game does.
 
 The pools live in `data/genshin/*.json` and `data/arknights/ops.json`.
 Refresh them when a patch lands, or when the log complains that entries
@@ -197,7 +223,7 @@ under `func/`, and `handlers/register.py` wires the two together.
 git submodule update --remote --merge share
 ```
 
-State goes under `data/`, which is not tracked: balances and portfolios
-as pickles, the picture collection as SQLite plus a blob directory, and
+State goes under `data/`, which is not tracked: balances, profit and
+loss, and portfolios as pickles, the picture collection as SQLite plus a blob directory, and
 `data/media/cache.db` remembering which pictures Telegram already holds
 so the same gacha art is not re-uploaded every time.

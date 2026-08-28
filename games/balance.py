@@ -8,6 +8,9 @@ from typing import Dict, List, Tuple
 BALANCE_DATA_DIR = 'data/games'
 BALANCE_DATA_FILE = 'balance.p'
 CHECKIN_DATA_FILE = 'checkin.p'
+PNL_DATA_FILE = 'pnl.p'
+
+HOUSE = 0                  # the bank's own seat; no account has id 0
 
 STARTING_BALANCE = 10000   # what a new player is handed
 MINIMUM_BALANCE = 10       # 救济金起点
@@ -32,6 +35,12 @@ def money(amount: int | float) -> str:
     if amount == int(amount):
         return f'{int(amount):,}'
     return f'{amount:,.2f}'
+
+
+def signed(amount: int | float) -> str:
+    """Money with the sign kept -- a profit only reads as one with it."""
+    amount = fmt_balance(amount)
+    return f'+{money(amount)}' if amount > 0 else money(amount)
 
 
 class UserBalance:
@@ -99,6 +108,64 @@ class UserBalance:
             pickle.dump(self.balances, f)
 
 
+class ProfitAndLoss:
+    """
+    What each player is up or down at the tables.
+
+    Only a wager moves this. An allowance, a transfer or a top-up
+    changes what somebody has without anybody having won it, and a
+    number that counts those is a record of generosity rather than of
+    play. The bank keeps a seat here too, holding the mirror image of
+    everyone else's: every chip a player wins is a chip the house lost,
+    so the two always add up to nothing.
+    """
+    def __init__(self):
+        self.pnl: Dict[int, float] = {}
+        ensure_data_dir()
+        self.load()
+
+    @property
+    def file_path(self) -> str:
+        return f'{BALANCE_DATA_DIR}/{PNL_DATA_FILE}'
+
+    def get(self, user_id: int) -> float:
+        return self.pnl.get(user_id, 0.0)
+
+    @property
+    def house(self) -> float:
+        """What the bank is up, which is what the players are down."""
+        return self.get(HOUSE)
+
+    def record(self, user_id: int, profit: int | float) -> float:
+        """Book one settled wager, and its opposite against the bank."""
+        booked = fmt_balance(self.get(user_id) + profit)
+        self.pnl[user_id] = booked
+        self.pnl[HOUSE] = fmt_balance(self.get(HOUSE) - profit)
+        self.save()
+        return booked
+
+    def players(self) -> Dict[int, float]:
+        """Everyone who has played, the house not being a player."""
+        return {u: p for u, p in self.pnl.items() if u != HOUSE}
+
+    def top(self, count: int = 10) -> List[Tuple[int, float]]:
+        return sorted(self.players().items(), key=lambda kv: kv[1], reverse=True)[:count]
+
+    def load(self):
+        if not os.path.isfile(self.file_path):
+            return
+        try:
+            with open(self.file_path, 'rb') as f:
+                self.pnl = pickle.load(f)
+        except Exception as e:
+            logging.error(f'[games]\tCould not read profit and loss: {e}')
+            self.pnl = {}
+
+    def save(self):
+        with open(self.file_path, 'wb') as f:
+            pickle.dump(self.pnl, f)
+
+
 class CheckIn:
     """Who has collected their daily allowance, and for how many days running."""
     def __init__(self):
@@ -146,4 +213,21 @@ class CheckIn:
 
 
 user_balance = UserBalance()
+profit_and_loss = ProfitAndLoss()
 check_in = CheckIn()
+
+
+def settle_bet(user_id: int, stake: int | float, returned: int | float) -> Tuple[float, float]:
+    """
+    Pay a finished wager out and book what it made or cost.
+
+    Every game ends here, and only here, so that the balance and the
+    profit column can never disagree about what a hand was worth. The
+    stake left the balance when the bet was placed, so only what comes
+    back goes in; the profit is the difference between the two.
+    """
+    profit = fmt_balance(returned - stake)
+    balance = user_balance.add_balance(user_id, returned) if returned \
+        else user_balance.get_balance(user_id)
+    profit_and_loss.record(user_id, profit)
+    return balance, profit

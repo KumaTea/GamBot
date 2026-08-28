@@ -1,9 +1,11 @@
 import asyncio
 from typing import Optional, Tuple
 from share.auth import ensure_auth
+from func.games.turns import in_turn
+from func.fading import transient
 from func.games.share import edit_text
 from telethon.tl.custom import Message
-from games.balance import money, user_balance
+from games.balance import money, settle_bet, signed
 from func.games.wallet import bettor_name, take_stake
 from games.dice import (
     BET_NAMES, MAX_STAKE, MIN_STAKE, PAYOUT,
@@ -38,6 +40,8 @@ def read_args(args: list) -> Tuple[str, str]:
 
 
 @ensure_auth
+@transient
+@in_turn
 async def command_dice(event) -> Optional[Message]:
     args = (event.raw_text or '').split()[1:]
     bet, stake_word = read_args(args)
@@ -61,14 +65,11 @@ async def command_dice(event) -> Optional[Message]:
 
     won = wins(bet, dice)
     returned = int(stake * PAYOUT[bet]) if won else 0
-    balance = user_balance.add_balance(event.sender_id, returned) if returned \
-        else user_balance.get_balance(event.sender_id)
-    profit = returned - stake
-    sign = '+' if profit > 0 else ''
+    balance, profit = settle_bet(event.sender_id, stake, returned)
 
     text += (
         f'\n{"中了！" if won else "没中。"}\n'
-        f'{sign}{money(profit)}（余额 {money(balance)}）\n'
+        f'{signed(profit)}（余额 {money(balance)}）\n'
         f'\n/dice 再来一把！'
     )
     await asyncio.sleep(ROLL_PAUSE)

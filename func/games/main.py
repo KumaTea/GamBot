@@ -3,6 +3,7 @@ from telethon.tl.custom import Message
 from func.games.dice import command_dice  # noqa -- re-exported for register.py
 from func.games.slots import command_slots  # noqa
 from func.games.baccarat import start_baccarat
+from func.fading import transient
 from func.games.share import busy_notice  # noqa
 from func.games.blackjack import command_blackjack  # noqa
 from func.games.wallet import (  # noqa
@@ -18,9 +19,13 @@ HELP = """**赌场**
 /slots 老虎机 — `/slots 500`，三个一样最高 120 倍
 /dice 骰宝 — `/dice 大 500`，豹子 30:1
 
+不写金额就是 1000，钱不够 1000 就是全部身家。
+一局一局来：同时开好几局会排队，打完一局才开下一局。
+牌局结束五分钟后会自己收走，免得刷屏。
+
 **钱**
 
-/balance 查余额
+/balance 查余额和盈亏
 /checkin 每日签到，连签有加成
 /rank 富豪榜
 /give 转账，回复某人 `/give 500`
@@ -34,5 +39,8 @@ async def command_games(event) -> Message:
 
 
 @ensure_auth
+@transient
 async def command_baccarat(event) -> Message:
+    # no player queue here: the whole group plays one hand together,
+    # and the chat already holds a single table of its own
     return await start_baccarat(event)
