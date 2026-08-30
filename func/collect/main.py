@@ -1,16 +1,17 @@
 import logging
 from typing import Optional
 from share.auth import ensure_auth
-from share.common import is_command
+from share.common import get_command_args, is_command
 from telethon.tl.custom import Message
-from bot.media import message_image
+from bot.media import as_ref, message_image
 from collect.store import collect_store
 from collect.main import (
-    Fleeting, Quiet, archive_message, carries_picture, fade,
+    BRIEF_TTL, Fleeting, Quiet, archive_message, carries_picture, fade,
     recent_messages, send_item
 )
 from collect.config import (
-    ARCHIVISTS, COLLECTIONS, Collection, DEFAULT_COLLECTION, collection_of_keyword
+    ARCHIVISTS, COLLECTIONS, DELETE_WORDS, NO_ARCHIVE, RESET_WORDS,
+    Collection, DEFAULT_COLLECTION, collection_of_keyword
 )
 
 
@@ -114,6 +115,11 @@ async def watch_messages(event) -> Optional[Message]:
     if is_command(text):
         return None
 
+    # hands off, said out loud: this files nothing and is not kept for a
+    # later keyword to point back at either
+    if NO_ARCHIVE in text.lower():
+        return None
+
     collections = collection_of_keyword(text)
     if collections:
         return await archive_for(event, collections)
@@ -137,6 +143,9 @@ async def archive_private(event) -> Optional[Message]:
 
     message = event.message
     text = message.raw_text or ''
+    if NO_ARCHIVE in text.lower():
+        return None
+
     named = collection_of_keyword(text)
     collections = named or [COLLECTIONS[DEFAULT_COLLECTION]]
 
@@ -172,6 +181,68 @@ async def archive_preview(event) -> Optional[Message]:
     return await event.reply(report) if report else None
 
 
+# -- `/ruby <word>`, for an archivist
+
+
+async def named_item(event, collection: Collection, target: Optional[str]):
+    """
+    The stored picture a `/ruby delete` means.
+
+    By number or by url when one is given -- both are what you see when
+    reading the database by hand -- and otherwise whatever picture the
+    command was replied to, found by the media Telegram already holds.
+    That last one is the useful gesture: the bot hands a picture out,
+    it turns out to be the wrong one, you reply to it.
+    """
+    if target:
+        if target.isdigit():
+            item = collect_store.get(int(target))
+            return item if item and item.collection == collection.name else None
+        return collect_store.by_url(collection.name, target)
+
+    replied = await event.get_reply_message()
+    picture = message_image(replied) if replied else None
+    ref = as_ref(picture) if picture is not None else None
+    return collect_store.by_media(collection.name, ref.id) if ref else None
+
+
+async def delete_item(event, collection: Collection, args: list[str]) -> Message:
+    """Take one picture back out of a collection."""
+    item = await named_item(event, collection, args[1] if len(args) > 1 else None)
+    if item is None:
+        return await say(event, f'{collection.label}：没找到要删的那张。')
+
+    collect_store.remove(item.id)
+    return await say(
+        event, f'{collection.label} -1（还剩 {collect_store.count(collection.name)} 张）')
+
+
+async def reset_recent(event, collection: Collection) -> Message:
+    """
+    Forget what a keyword would have pointed back at.
+
+    Said before a sentence that has "ruby" in it and does not mean it.
+    Both halves of the exchange go away shortly afterwards -- it is
+    housekeeping, and housekeeping in the middle of a conversation is
+    worth less than the room it takes up.
+    """
+    recent_messages.clear(event.chat_id, event.sender_id)
+    sent = await event.reply(f'{collection.label}：忘了刚才那几条。')
+    fade(sent, BRIEF_TTL)
+    fade(event.message, BRIEF_TTL)
+    return sent
+
+
+async def subcommand(event, collection: Collection, args: list[str]) -> Optional[Message]:
+    """`/ruby reset` and `/ruby delete`, or None for anything else."""
+    word = args[0].lower()
+    if word in RESET_WORDS:
+        return await reset_recent(event, collection)
+    if word in DELETE_WORDS:
+        return await delete_item(event, collection, args)
+    return None
+
+
 def make_command(collection: Collection):
     """One `/name` handler, bound to one collection."""
 
@@ -180,6 +251,12 @@ def make_command(collection: Collection):
         # an archivist pointing the command at a picture is filing it,
         # not asking for one; everyone else always gets a picture
         if may_archive(event.sender_id):
+            args = get_command_args(event.raw_text)
+            if args:
+                handled = await subcommand(event, collection, args)
+                if handled:
+                    return handled
+
             filed = await archive_reply(event, collection)
             if filed:
                 return filed

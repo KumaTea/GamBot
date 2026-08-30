@@ -40,7 +40,8 @@ class Fleeting(str):
     """
 
 
-FLEETING_TTL = 5 * 60
+FLEETING_TTL = 5 * 60   # a report that answers "did that go anywhere?"
+BRIEF_TTL = 5           # a report nobody needs to read twice
 
 _fading = set()
 
@@ -111,6 +112,10 @@ class RecentMessages:
                 return message
         return None
 
+    def clear(self, chat_id: int, sender_id: int):
+        """Forget the lot, so the next keyword has nothing to point at."""
+        self.seen.pop((chat_id, sender_id), None)
+
     def forget(self, chat_id: int, sender_id: int, msg_id: int):
         recent = self.seen.get((chat_id, sender_id))
         if recent:
@@ -136,7 +141,9 @@ async def archive_message(
     it at all -- which is not an error, just nothing to do.
     """
     picture = message_image(message)
-    url = webpage_url(message)
+    # where it came from, as far as the message says: the preview's own
+    # url, or failing that a link in the caption
+    url = webpage_url(message) or first_link(message)
 
     if picture is not None:
         ref = as_ref(picture)
@@ -155,9 +162,8 @@ async def archive_message(
         return f'{collection.label} +1（共 {collect_store.count(collection.name)} 张）'
 
     # A link Telegram has not unfurled -- go and get it ourselves.
-    link = url or first_link(message)
-    if link:
-        return await archive_url(collection, link, message.client, added_by)
+    if url:
+        return await archive_url(collection, url, message.client, added_by)
     return None
 
 

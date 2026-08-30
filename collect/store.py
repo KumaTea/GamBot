@@ -161,9 +161,29 @@ class CollectStore:
         )
         self.db.commit()
 
-    def remove(self, item_id: int):
+    def remove(self, item_id: int) -> bool:
+        """
+        Take one picture out of a collection.
+
+        The saved bytes go with it, unless another row still points at
+        them: blobs are named by digest and shared between collections,
+        so one can outlive the row that happened to be deleted first.
+        """
+        item = self.get(item_id)
+        if item is None:
+            return False
+
         self.db.execute('DELETE FROM items WHERE id = ?', (item_id,))
         self.db.commit()
+
+        if item.blob_name and not self.db.execute(
+                'SELECT 1 FROM items WHERE blob_name = ? LIMIT 1',
+                (item.blob_name,)).fetchone():
+            try:
+                os.remove(f'{COLLECT_BLOB_DIR}/{item.blob_name}')
+            except OSError as e:
+                logging.warning(f'[collect]\tCould not remove {item.blob_name}: {e}')
+        return True
 
     # -- reading
 
@@ -187,6 +207,12 @@ class CollectStore:
     def has_media(self, collection: str, media_id: int) -> bool:
         return bool(self.db.execute(
             'SELECT 1 FROM items WHERE collection = ? AND media_id = ?',
+            (collection, media_id)).fetchone())
+
+    def by_media(self, collection: str, media_id: int) -> Optional[Item]:
+        """The item a picture already on Telegram belongs to."""
+        return self._row(self.db.execute(
+            'SELECT * FROM items WHERE collection = ? AND media_id = ? LIMIT 1',
             (collection, media_id)).fetchone())
 
     def by_url(self, collection: str, url: str) -> Optional[Item]:

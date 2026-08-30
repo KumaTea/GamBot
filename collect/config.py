@@ -57,6 +57,17 @@ DEFAULT_COLLECTION = 'ruby'
 RECENT_KEEP = 3                # messages remembered per person, per chat
 RECENT_TTL = 60 * 60           # seconds one stays worth filing
 
+# Written anywhere in a message, this keeps the bot's hands off it: the
+# message files nothing and is not remembered for a later keyword to
+# point back at. Aiming `/ruby` at something is still deliberate, and
+# still files it.
+NO_ARCHIVE = '#noarchive'
+
+# `/ruby <word>`, for an archivist. Anything else after the command is
+# ignored, and everyone else just gets a picture as usual.
+RESET_WORDS = ('reset', 'forget', '忘记')
+DELETE_WORDS = ('delete', 'del', 'rm', 'remove', '删除')
+
 
 def collection_of_keyword(text: str) -> list[Collection]:
     """Every collection whose keyword appears in a piece of text."""

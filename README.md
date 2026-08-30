@@ -131,6 +131,43 @@ A link handed over this way is answered with 交给取图的账号了 — which
 takes itself back after five minutes, since the picture it promises
 reports itself when it lands.
 
+Where a picture came from is kept alongside it: the url of the preview
+it was filed from, or a link in its caption when there was no preview.
+
+#### Stopping it
+
+Two ways, for the two things that go wrong.
+
+`#NoArchive` anywhere in a message keeps the bot's hands off it. The
+message files nothing, and is not kept for a later keyword to point back
+at either — so it works both on the sentence that says `ruby` and on the
+picture you would rather it did not reach for:
+
+```
+that ruby one was great #NoArchive
+```
+
+`/ruby reset` forgets what a keyword would have found, for whoever sends
+it, in that chat. Say it before a sentence that has `ruby` in it and
+does not mean it. Both halves of the exchange delete themselves five
+seconds later.
+
+Aiming `/ruby` at something is still deliberate and still files it;
+neither of these gets in the way of that.
+
+#### Taking one back out
+
+`/ruby delete`, for an archivist, three ways of naming the same picture:
+
+```
+/ruby delete            # replying to a picture the bot handed out
+/ruby delete 42         # by row id, as read from the database
+/ruby delete https://…  # by the url it was filed from
+```
+
+The saved bytes go with the row, unless another collection still points
+at them.
+
 **Page links go through a second account** — an X post, say. Telegram
 hands bots `webPageEmpty` for those, and the methods that would resolve
 the preview (`messages.getWebPagePreview`, `messages.getWebPage`) are
