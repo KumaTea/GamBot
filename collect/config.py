@@ -8,13 +8,12 @@ class Collection:
     """
     One named pile of pictures.
 
-    `keywords` are what turns a message into a filing instruction, and
-    `commands` are what hands a random picture back out again. Adding a
-    second pile is a matter of adding a second entry here.
+    `commands` both hand a random picture back out and, replied to a
+    picture by an archivist, file it. Adding a second pile is a matter
+    of adding a second entry here.
     """
     name: str
     label: str
-    keywords: tuple[str, ...]
     commands: tuple[str, ...]
     empty_text: str = '还没有存过图片。'
 
@@ -23,7 +22,6 @@ COLLECTIONS: dict[str, Collection] = {
     'ruby': Collection(
         name='ruby',
         label='Ruby',
-        keywords=('ruby', '路比'),
         commands=('ruby',),
         empty_text='Ruby 的相册还是空的。',
     ),
@@ -49,30 +47,13 @@ PREVIEW_ACCOUNT: Optional[int] = 345060487
 # rather than a request and so has no collection attached to it.
 DEFAULT_COLLECTION = 'ruby'
 
-# How far back a bare keyword ("ruby and me") will look for the picture
-# it refers to, when the message does not quote one itself.
-#
-# Counted in messages from the same person: another bot talking in
-# between uses none of it up, because everybody is remembered apart.
-RECENT_KEEP = 3                # messages remembered per person, per chat
-RECENT_TTL = 60 * 60           # seconds one stays worth filing
-
-# Written anywhere in a message, this keeps the bot's hands off it: the
-# message files nothing and is not remembered for a later keyword to
-# point back at. Aiming `/ruby` at something is still deliberate, and
-# still files it.
+# Written anywhere in a picture sent to the bot in private, this keeps
+# it from being filed -- the bot reads its file id back instead.
 NO_ARCHIVE = '#noarchive'
 
 # `/ruby <word>`, for an archivist. Anything else after the command is
 # ignored, and everyone else just gets a picture as usual.
-RESET_WORDS = ('reset', 'forget', '忘记')
 DELETE_WORDS = ('delete', 'del', 'rm', 'remove', '删除')
-
-
-def collection_of_keyword(text: str) -> list[Collection]:
-    """Every collection whose keyword appears in a piece of text."""
-    lowered = (text or '').lower()
-    return [c for c in COLLECTIONS.values() if any(k in lowered for k in c.keywords)]
 
 
 def all_commands() -> list[str]:

@@ -4,7 +4,7 @@ from common.info import username
 from share.common import command_re
 from bot.session import bot, scheduler
 from handlers.functions import *  # noqa
-from handlers.messages import private_message, watch_messages
+from handlers.messages import private_message
 from func.collect.main import collection_commands
 from func.games.callbacks import handle_baccarat_callback, handle_blackjack_callback
 
@@ -69,13 +69,6 @@ def register_handlers():
     # filing a picture by replying to it works in the bot's own chat too
     for collection, command in collection_commands.items():
         on_command(command, [collection])
-
-    # everything else in a group, so a keyword can file the picture
-    # that came before it
-    bot.add_event_handler(watch_messages, events.NewMessage(
-        incoming=True,
-        func=in_group
-    ))
 
     # messages
     bot.add_event_handler(private_message, events.NewMessage(

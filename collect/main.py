@@ -1,8 +1,7 @@
-import time
 import asyncio
 import logging
 from typing import Optional
-from collections import deque
+from collections import OrderedDict
 from telethon.tl.custom import Message
 from telethon.tl.types import MessageEntityUrl, MessageEntityTextUrl
 from bot.media import (
@@ -10,24 +9,10 @@ from bot.media import (
     to_upload, upload_quietly, webpage_url
 )
 from collect.store import Item, collect_store
-from collect.config import (
-    Collection, PREVIEW_ACCOUNT, RECENT_KEEP, RECENT_TTL
-)
+from collect.config import Collection, PREVIEW_ACCOUNT
 
 
 # -- what a report is
-
-
-class Quiet(str):
-    """
-    A report to make only when it was asked for.
-
-    A keyword is a word before it is an instruction -- "ruby" turns up
-    in ordinary sentences, and one of those that happens to follow a
-    link should not be answered with a complaint about the link. Aimed
-    deliberately at something, by `/ruby` or in the bot's own chat, the
-    same words answer a question somebody asked, and get said.
-    """
 
 
 class Fleeting(str):
@@ -41,7 +26,6 @@ class Fleeting(str):
 
 
 FLEETING_TTL = 5 * 60   # a report that answers "did that go anywhere?"
-BRIEF_TTL = 5           # a report nobody needs to read twice
 
 _fading = set()
 
@@ -68,62 +52,15 @@ def fade(message: Message, after: int = FLEETING_TTL):
     task.add_done_callback(_fading.discard)
 
 
-# -- what a keyword can point back at
-
-
-class RecentMessages:
+def filed(collection: Collection, item_id: int) -> str:
     """
-    The last few messages each person sent in each chat.
+    The line that says a picture went in.
 
-    A bare keyword ("ruby and me") files the picture that came just
-    before it, so something has to remember what that was. The messages
-    are kept whole rather than by id: reaching one then costs nothing,
-    where re-fetching it would be a round trip to ask Telegram for
-    something we were handed already.
-
-    Keeping them per person is what makes another bot talking in between
-    harmless -- it takes none of the lookback up, because it is not in
-    the same queue. Only whoever may file gets remembered; nobody else's
-    message can be what a keyword points at.
+    It names the row, so `/ruby delete <id>` can take it straight back
+    out -- the running total next to it is not an id, since deleted rows
+    leave gaps behind them.
     """
-    def __init__(self, keep: int = RECENT_KEEP, ttl: int = RECENT_TTL):
-        self.keep = keep
-        self.ttl = ttl
-        self.seen: dict[tuple[int, int], deque] = {}
-
-    def remember(self, chat_id: int, sender_id: int, message: Message):
-        recent = self.seen.setdefault((chat_id, sender_id), deque(maxlen=self.keep))
-        recent.append((message, time.time()))
-
-    def before(self, chat_id: int, sender_id: int) -> Optional[Message]:
-        """
-        The last thing this person said that there would be any point
-        filing -- newest first, and nothing older than the ttl.
-        """
-        recent = self.seen.get((chat_id, sender_id))
-        if not recent:
-            return None
-
-        now = time.time()
-        for message, when in reversed(recent):
-            if now - when > self.ttl:
-                break  # everything further back is older still
-            if carries_picture(message):
-                return message
-        return None
-
-    def clear(self, chat_id: int, sender_id: int):
-        """Forget the lot, so the next keyword has nothing to point at."""
-        self.seen.pop((chat_id, sender_id), None)
-
-    def forget(self, chat_id: int, sender_id: int, msg_id: int):
-        recent = self.seen.get((chat_id, sender_id))
-        if recent:
-            self.seen[(chat_id, sender_id)] = deque(
-                (i for i in recent if i[0].id != msg_id), maxlen=self.keep)
-
-
-recent_messages = RecentMessages()
+    return f'{collection.label} +1（#{item_id}，共 {collect_store.count(collection.name)} 张）'
 
 
 # -- filing
@@ -132,13 +69,16 @@ recent_messages = RecentMessages()
 async def archive_message(
         collection: Collection,
         message: Message,
-        added_by: int = None
+        added_by: int = None,
+        asked_by: Message = None
 ) -> Optional[str]:
     """
     File the picture a message carries.
 
     Returns a line to report back, or None if there was no picture in
-    it at all -- which is not an error, just nothing to do.
+    it at all -- which is not an error, just nothing to do. `asked_by`
+    is the message that asked, and is where a picture fetched from a
+    link gets shown once it arrives.
     """
     picture = message_image(message)
     # where it came from, as far as the message says: the preview's own
@@ -148,7 +88,7 @@ async def archive_message(
     if picture is not None:
         ref = as_ref(picture)
         if ref and collect_store.has_media(collection.name, ref.id):
-            return Quiet(f'{collection.label}：这张已经存过了。')
+            return f'{collection.label}：这张已经存过了。'
         item_id = collect_store.add(
             collection.name,
             ref=ref,
@@ -158,12 +98,12 @@ async def archive_message(
             added_by=added_by,
         )
         if item_id is None:
-            return Quiet(f'{collection.label}：这张已经存过了。')
-        return f'{collection.label} +1（共 {collect_store.count(collection.name)} 张）'
+            return f'{collection.label}：这张已经存过了。'
+        return filed(collection, item_id)
 
     # A link Telegram has not unfurled -- go and get it ourselves.
     if url:
-        return await archive_url(collection, url, message.client, added_by)
+        return await archive_url(collection, url, message.client, added_by, asked_by)
     return None
 
 
@@ -194,7 +134,8 @@ async def archive_url(
         collection: Collection,
         url: str,
         client,
-        added_by: int = None
+        added_by: int = None,
+        asked_by: Message = None
 ) -> str:
     """
     File a picture that is not on Telegram yet.
@@ -205,7 +146,7 @@ async def archive_url(
     media expires.
     """
     if collect_store.by_url(collection.name, url):
-        return Quiet(f'{collection.label}：这个链接已经存过了。')
+        return f'{collection.label}：这个链接已经存过了。'
 
     content = await download_image(url)
     if not content:
@@ -213,7 +154,7 @@ async def archive_url(
         # a page rather than a picture. A bot cannot ask Telegram what is
         # on a page (`messages.getWebPagePreview` is BOT_METHOD_INVALID),
         # so somebody who can has to go and look.
-        return await hand_to_preview(collection, url, client)
+        return await hand_to_preview(collection, url, client, asked_by)
 
     ref = await upload_quietly(client, content)
     item_id = collect_store.add(
@@ -224,33 +165,52 @@ async def archive_url(
         added_by=added_by,
     )
     if item_id is None:
-        return Quiet(f'{collection.label}：这张已经存过了。')
-    return f'{collection.label} +1（共 {collect_store.count(collection.name)} 张）'
+        return f'{collection.label}：这张已经存过了。'
+    return filed(collection, item_id)
 
 
-async def hand_to_preview(collection: Collection, url: str, client) -> str:
+# The link the bot handed the preview account -> the message that asked
+# for it, as (chat id, message id). The account's picture comes back as
+# a reply to the link, which is how it finds its way home. Kept in
+# memory only: a restart in between costs the picture being shown, not
+# it being filed.
+waiting: OrderedDict[int, tuple[int, int]] = OrderedDict()
+WAITING_KEEP = 100
+
+
+async def hand_to_preview(
+        collection: Collection,
+        url: str,
+        client,
+        asked_by: Message = None
+) -> str:
     """
     Ask the preview account what the picture behind a page link is.
 
     Nothing is waited for. The account answers with a picture of its
     own accord -- a second or two later, once Telegram has fetched the
     page -- and that arrives as an ordinary message, which files itself
-    when it does. So there is no request to hold open, nothing to time
-    out, and nothing to remember in between.
+    when it does. So there is no request to hold open and nothing to
+    time out; all that is remembered is where to show the result.
     """
-    stuck = Quiet(
-        f'{collection.label}：这个链接里没有能直接取到的图片，把图转发过来吧。')
+    stuck = f'{collection.label}：这个链接里没有能直接取到的图片，把图转发过来吧。'
     if not PREVIEW_ACCOUNT:
         return stuck
 
     try:
-        await client.send_message(PREVIEW_ACCOUNT, url)
+        sent = await client.send_message(PREVIEW_ACCOUNT, url)
     except Exception as e:
         logging.warning(f'[collect]\tCould not reach the preview account: {e}')
         return stuck
-    # said now and gone in five minutes: the picture it promises files
-    # itself and reports where it lands, so this line is only ever an
-    # answer to "did that go anywhere?"
+
+    if asked_by is not None:
+        waiting[sent.id] = (asked_by.chat_id, asked_by.id)
+        while len(waiting) > WAITING_KEEP:
+            waiting.popitem(last=False)
+
+    # said now and gone in five minutes: the picture it promises turns
+    # up under the request, with its id, once it is filed -- so this
+    # line is only ever an answer to "did that go anywhere?"
     return Fleeting(f'{collection.label}：链接交给取图的账号了，取到就存。')
 
 

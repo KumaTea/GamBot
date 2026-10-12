@@ -90,8 +90,8 @@ file prepared by hand. Nothing refreshes on a schedule.
 
 ### 存图
 
-A named collection of pictures, filed by keyword and handed back at
-random. `ruby` is the one that ships; more go in `collect/config.py`.
+A named collection of pictures, handed back at random. `ruby` is the
+one that ships; more go in `collect/config.py`.
 
 Anyone can ask for one:
 
@@ -99,74 +99,66 @@ Anyone can ask for one:
 /ruby
 ```
 
-Only the accounts in `collect.config.ARCHIVISTS` can put one in. Any of
-these files the picture:
+Only the accounts in `collect.config.ARCHIVISTS` can put one in, and
+there are two ways:
 
 - reply `/ruby` to a message with a picture or a link in it
-- send a picture captioned `ruby`
-- reply `ruby` to a message with a picture in it
-- say `ruby` just after posting one yourself
 - send or forward a picture, or a link, to the bot in private
-
-`ruby`, `Ruby` and `路比` all count as the keyword.
 
 `/ruby` only files when an archivist aims it at a picture. Pointed at
 anything else — no reply, a reply to plain text, or anyone else asking —
-it hands a picture out as usual.
+it hands a picture out as usual. Nothing else in a group files
+anything: the word `ruby` in a sentence is just a word.
 
-A bare keyword looks back over your own last `RECENT_KEEP` messages in
-that chat and takes the newest with a picture or a link in it. Your own:
-another bot talking in between costs you nothing, because everybody is
-remembered separately, and nobody else's message can be what your
-keyword meant. Nothing is fetched to do this — the messages are still in
-hand from when they went past.
+In private, `#NoArchive` in the caption keeps a picture out of the
+collection; the bot reads its file id back instead.
 
-It says nothing when it finds nothing, and nothing when what it finds
-turns out to be unfilable or already filed. `ruby` is a word before it
-is an instruction, and a sentence that happens to contain one should not
-be answered with a complaint. Aim `/ruby` at the thing instead, or send
-it to the bot in private, and the same answers get made out loud.
+Every filing says which row it became:
+
+```
+Ruby +1（#565，共 556 张）
+```
+
+`#565` is the id `/ruby delete` and `/ruby 565` take. The 556 next to it
+is only a count — deleted rows leave gaps, so the two drift apart.
 
 A link handed over this way is answered with 交给取图的账号了 — which
-takes itself back after five minutes, since the picture it promises
-reports itself when it lands.
+takes itself back after five minutes. The picture it promises turns up
+under the message that asked for it, captioned with its id, once it is
+filed: that is the moment to see that a page's preview was the wrong
+picture, and to reply `/ruby delete` to it.
 
 Where a picture came from is kept alongside it: the url of the preview
 it was filed from, or a link in its caption when there was no preview.
 
-#### Stopping it
+#### Looking at one, taking one back out
 
-Two ways, for the two things that go wrong.
-
-`#NoArchive` anywhere in a message keeps the bot's hands off it. The
-message files nothing, and is not kept for a later keyword to point back
-at either — so it works both on the sentence that says `ruby` and on the
-picture you would rather it did not reach for:
+For an archivist:
 
 ```
-that ruby one was great #NoArchive
-```
-
-`/ruby reset` forgets what a keyword would have found, for whoever sends
-it, in that chat. Say it before a sentence that has `ruby` in it and
-does not mean it. Both halves of the exchange delete themselves five
-seconds later.
-
-Aiming `/ruby` at something is still deliberate and still files it;
-neither of these gets in the way of that.
-
-#### Taking one back out
-
-`/ruby delete`, for an archivist, three ways of naming the same picture:
-
-```
-/ruby delete            # replying to a picture the bot handed out
-/ruby delete 42         # by row id, as read from the database
+/ruby 42                # show #42, captioned with its id
+/ruby delete            # replying to a picture the bot sent
+/ruby delete 42         # by id, the # number from the filing report
 /ruby delete https://…  # by the url it was filed from
 ```
 
+Replying `/ruby delete` works on any picture the bot sent — a draw, a
+`/ruby 42`, or the picture a link came back as.
+
 The saved bytes go with the row, unless another collection still points
 at them.
+
+#### Editing the database by hand
+
+`data/collect/collect.db` is plain SQLite and can be edited while the
+bot runs, as long as it is edited in place — `sqlite3` on the server,
+or sqlite-web pointed at it. Do not copy it off and back while the bot
+is running: that puts a new file where the old one was, the bot keeps
+the old one open, and every write after it fails as "attempt to write a
+readonly database". If it has to be done that way, stop the bot first.
+
+The picture column is a Telegram file reference and shows as a blob in
+any viewer. `/ruby 42` is the way to see what a row is.
 
 **Page links go through a second account** — an X post, say. Telegram
 hands bots `webPageEmpty` for those, and the methods that would resolve
@@ -185,10 +177,6 @@ links are then a dead end again, and forwarding the picture is the way.
 Links that point straight at an image file never needed any of it: the
 bot fetches those itself and hands them to Telegram without sending
 them to anybody, so it still ends up with something reusable.
-
-**The keyword only works if the bot can see ordinary messages.** Turn
-group privacy off in @BotFather (`/setprivacy` → Disable); with it on,
-the bot only ever receives commands and has nothing to file.
 
 ### 其他
 
